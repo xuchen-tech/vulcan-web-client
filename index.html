@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>Vulcan WebSocket OPC UA 客户端</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 60rem; }
+    label { display: inline-block; min-width: 6rem; }
+    input, select, button { margin: 0.25rem 0; padding: 0.3rem 0.5rem; }
+    section { margin-top: 1rem; }
+    #log { white-space: pre-wrap; background: #f4f4f4; padding: 0.75rem;
+           min-height: 8rem; font-family: monospace; font-size: 0.9rem; }
+    .ok { color: #1a7f37; } .err { color: #cf222e; }
+  </style>
+</head>
+<body>
+  <h1>Vulcan WebSocket OPC UA 客户端</h1>
+  <p>基于 <code>@wsopcua/wsopcua</code>（docs/08-websocket-transport.md §5 选型），
+     浏览器直连 <code>wss://</code> 端点。</p>
+
+  <section>
+    <label for="url">端点 URL</label>
+    <input id="url" size="40" value="wss://localhost:4843/opcua" />
+    <button id="connect">连接</button>
+    <button id="disconnect" disabled>断开</button>
+  </section>
+
+  <section>
+    <label for="nodeId">NodeId</label>
+    <input id="nodeId" size="24" value="ns=2;i=6011" />
+    <button id="read">读取</button>
+    <button id="write" disabled>写入（下方值）</button>
+    <input id="value" size="16" value="0" placeholder="写入值" />
+  </section>
+
+  <section>
+    <label for="browseFrom">浏览</label>
+    <input id="browseFrom" size="24" value="ns=0;i=85" />
+    <button id="browse">浏览</button>
+  </section>
+
+  <section>
+    <label>状态</label>
+    <span id="status">未连接</span>
+  </section>
+
+  <section>
+    <h2>日志</h2>
+    <div id="log"></div>
+  </section>
+
+  <script type="module" src="dist/app.js"></script>
+</body>
+</html>
