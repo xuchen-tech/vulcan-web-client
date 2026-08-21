@@ -1,0 +1,31 @@
+{
+  "name": "vulcan-web-client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Browser OPC UA client (UaExpert-style) via WebSocket — Vue 3 + Vite + TypeScript",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@wsopcua/wsopcua": "^0.12.2",
+    "pinia": "^3.0.1",
+    "vue": "^3.5.13"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node18": "^18.2.4",
+    "@types/node": "^18.19.68",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/tsconfig": "^0.7.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.5",
+    "vitest": "^3.0.5",
+    "vue-tsc": "^2.2.0"
+  }
+}
