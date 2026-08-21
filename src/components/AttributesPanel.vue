@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
+import MethodCallDialog from '@/components/MethodCallDialog.vue'
 import WriteValueDialog from '@/components/WriteValueDialog.vue'
 import { useAddressSpaceStore } from '@/stores/address-space'
 import { useConnectionStore } from '@/stores/connection'
@@ -13,6 +14,11 @@ const nodeDetail = useNodeDetailStore()
 const monitor = useMonitorStore()
 
 const writeDialogOpen = ref(false)
+const methodDialogOpen = ref(false)
+
+const selectedMethodLabel = computed(
+  () => addressSpace.getSelectedNode()?.displayName ?? '',
+)
 
 function onReadValue(): void {
   void nodeDetail.readSelectedValue()
@@ -36,6 +42,14 @@ async function onWriteSubmit(value: string): Promise<void> {
 function onAddMonitor(): void {
   void monitor.addSelectedNode()
 }
+
+function openMethodDialog(): void {
+  methodDialogOpen.value = true
+}
+
+function closeMethodDialog(): void {
+  methodDialogOpen.value = false
+}
 </script>
 
 <template>
@@ -49,7 +63,13 @@ function onAddMonitor(): void {
     </div>
 
     <template v-else>
-      <div v-if="nodeDetail.canReadWriteValue" class="value-actions">
+      <div v-if="addressSpace.isSelectedMethod" class="value-actions">
+        <button type="button" class="btn btn-method" @click="openMethodDialog">
+          调用方法
+        </button>
+      </div>
+
+      <div v-else-if="nodeDetail.canReadWriteValue" class="value-actions">
         <button
           type="button"
           class="btn btn-read"
@@ -77,7 +97,7 @@ function onAddMonitor(): void {
       </div>
 
       <div v-else-if="!nodeDetail.attrsLoading && !nodeDetail.attrsError" class="panel-hint compact">
-        当前节点非 Variable，Value 读/写不可用
+        当前节点非 Variable / Method，Value 读/写不可用
       </div>
 
       <div v-if="nodeDetail.attrsLoading" class="panel-hint">
@@ -124,6 +144,13 @@ function onAddMonitor(): void {
       :busy="nodeDetail.valueBusy"
       @close="closeWriteDialog"
       @submit="onWriteSubmit"
+    />
+
+    <MethodCallDialog
+      :visible="methodDialogOpen"
+      :method-id="addressSpace.selectedNodeId ?? ''"
+      :method-label="selectedMethodLabel"
+      @close="closeMethodDialog"
     />
   </div>
 </template>
@@ -178,6 +205,15 @@ function onAddMonitor(): void {
 
 .btn-monitor:hover:not(:disabled) {
   background: #6639ba;
+}
+
+.btn-method {
+  background: #bf8700;
+  color: #fff;
+}
+
+.btn-method:hover:not(:disabled) {
+  background: #9a6700;
 }
 
 .panel-hint {

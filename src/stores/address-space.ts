@@ -127,8 +127,16 @@ export const useAddressSpaceStore = defineStore('addressSpace', () => {
     return nodeClass === NodeClass.Variable
   }
 
+  function isMethodNode(nodeClass: NodeClass | undefined): boolean {
+    return nodeClass === NodeClass.Method
+  }
+
   const isSelectedVariable = computed(() =>
     isVariableNode(getSelectedNode()?.nodeClass),
+  )
+
+  const isSelectedMethod = computed(() =>
+    isMethodNode(getSelectedNode()?.nodeClass),
   )
 
   return {
@@ -144,7 +152,9 @@ export const useAddressSpaceStore = defineStore('addressSpace', () => {
     selectNode,
     getSelectedNode,
     isVariableNode,
+    isMethodNode,
     isSelectedVariable,
+    isSelectedMethod,
   }
 })
 

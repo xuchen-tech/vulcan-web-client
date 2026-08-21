@@ -193,3 +193,32 @@ export interface SubscriptionSettings {
   samplingInterval: number
   queueSize: number
 }
+
+export interface MethodArgumentDef {
+  name: string
+  dataTypeNodeId: string
+  dataTypeName: string
+  valueRank: number
+  arrayDimensions: number[]
+  description: string
+}
+
+export interface MethodSignature {
+  methodId: string
+  objectId: string | null
+  inputArguments: MethodArgumentDef[]
+  outputArguments: MethodArgumentDef[]
+}
+
+export interface MethodCallOutput {
+  name: string
+  displayValue: string
+  dataTypeName: string
+}
+
+export interface MethodCallResult {
+  statusCode: string
+  isError: boolean
+  inputArgumentResults: string[]
+  outputs: MethodCallOutput[]
+}
