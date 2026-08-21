@@ -65,4 +65,13 @@ describe('useConnectionStore', () => {
       true,
     )
   })
+
+  it('allows reconnect after failed status', async () => {
+    const connection = useConnectionStore()
+    connection.status = 'failed'
+    connection.error = 'ECONNREFUSED'
+
+    expect(connection.canConnect).toBe(true)
+    expect(connection.connectButtonLabel).toBe('Reconnect')
+  })
 })

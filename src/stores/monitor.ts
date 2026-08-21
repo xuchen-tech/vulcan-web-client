@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { writeValue } from '@/opcua/readwrite'
 import { subscriptionManager } from '@/opcua/subscription'
 import type { MonitorRow, SubscriptionSettings } from '@/opcua/types'
+import { logActionError, toErrorMessage } from '@/shared/error-message'
 
 import { useAddressSpaceStore } from './address-space'
 import { useConnectionStore } from './connection'
@@ -41,6 +42,10 @@ export const useMonitorStore = defineStore('monitor', () => {
 
     subscriptionManager.setUpdateHandler((nodeId, update) => {
       patchRow(nodeId, update)
+    })
+
+    subscriptionManager.setPollErrorHandler((nodeId, err) => {
+      useLogStore().warn(`轮询 read 失败 (${nodeId}): ${toErrorMessage(err)}`)
     })
 
     const connection = useConnectionStore()
@@ -105,9 +110,8 @@ export const useMonitorStore = defineStore('monitor', () => {
         log.ok(`已加入监视: ${nodeId}`)
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
+      const message = logActionError(log, `加入监视失败 (${nodeId})`, err)
       statusHint.value = `加入监视失败: ${message}`
-      log.err(`加入监视失败 (${nodeId}): ${message}`)
     } finally {
       busy.value = false
     }
@@ -141,8 +145,7 @@ export const useMonitorStore = defineStore('monitor', () => {
       writeDrafts.value = rest
       log.ok(`已移除监视: ${nodeId}`)
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      log.err(`移除监视失败 (${nodeId}): ${message}`)
+      logActionError(log, `移除监视失败 (${nodeId})`, err)
     } finally {
       busy.value = false
     }
@@ -197,8 +200,7 @@ export const useMonitorStore = defineStore('monitor', () => {
           : result.readBack.displayValue
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      log.err(`监视写失败 (${nodeId}): ${message}`)
+      logActionError(log, `监视写失败 (${nodeId})`, err)
     } finally {
       patchRow(nodeId, { writeBusy: false })
       busy.value = false
@@ -231,8 +233,7 @@ export const useMonitorStore = defineStore('monitor', () => {
         `监视参数已更新（发布 ${settings.publishingInterval}ms，采样 ${settings.samplingInterval}ms，队列 ${settings.queueSize}）`,
       )
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      log.err(`更新监视参数失败: ${message}`)
+      logActionError(log, '更新监视参数失败', err)
     } finally {
       busy.value = false
     }

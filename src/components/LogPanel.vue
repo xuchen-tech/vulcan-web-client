@@ -1,27 +1,50 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
-import type { LogLevel } from '@/stores/log'
-import { useLogStore } from '@/stores/log'
+import { formatLogTime } from '@/shared/format-log-time'
+import {
+  LOG_LEVEL_LABEL,
+  type LogFilter,
+  type LogLevel,
+  useLogStore,
+} from '@/stores/log'
 
 const log = useLogStore()
 const listEl = ref<HTMLElement | null>(null)
 
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString(undefined, { hour12: false })
-}
+const filterOptions: { value: LogFilter; label: string }[] = [
+  { value: 'all', label: '全部' },
+  { value: 'info', label: 'INFO' },
+  { value: 'ok', label: 'OK' },
+  { value: 'warn', label: 'WARN' },
+  { value: 'err', label: 'ERR' },
+]
+
+const summaryText = computed(() => {
+  const total = log.entries.length
+  const visible = log.filteredEntries.length
+  if (log.filterLevel === 'all') {
+    return `${total} 条`
+  }
+  return `${visible}/${total} 条`
+})
 
 function levelClass(level: LogLevel): string {
   return `level-${level}`
 }
 
+async function scrollToBottom(): Promise<void> {
+  if (!log.autoScroll || !listEl.value) {
+    return
+  }
+  await nextTick()
+  listEl.value.scrollTop = listEl.value.scrollHeight
+}
+
 watch(
-  () => log.entries.length,
-  async () => {
-    await nextTick()
-    if (listEl.value) {
-      listEl.value.scrollTop = listEl.value.scrollHeight
-    }
+  () => [log.filteredEntries.length, log.autoScroll] as const,
+  () => {
+    void scrollToBottom()
   },
 )
 </script>
@@ -29,19 +52,48 @@ watch(
 <template>
   <footer class="log-panel">
     <div class="log-header">
-      <h2>Log</h2>
-      <button type="button" class="clear-btn" @click="log.clear()">Clear</button>
+      <div class="log-title">
+        <h2>Log</h2>
+        <span class="log-count">{{ summaryText }}</span>
+      </div>
+
+      <div class="log-controls">
+        <label class="control">
+          <span>级别</span>
+          <select v-model="log.filterLevel" class="control-select">
+            <option
+              v-for="option in filterOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </label>
+
+        <label class="control checkbox">
+          <input v-model="log.autoScroll" type="checkbox" />
+          <span>自动滚动</span>
+        </label>
+
+        <button type="button" class="clear-btn" @click="log.clear()">
+          Clear
+        </button>
+      </div>
     </div>
+
     <div ref="listEl" class="log-list">
-      <p v-if="log.entries.length === 0" class="log-empty">暂无日志</p>
+      <p v-if="log.filteredEntries.length === 0" class="log-empty">
+        {{ log.entries.length === 0 ? '暂无日志' : '当前筛选无匹配项' }}
+      </p>
       <div
-        v-for="entry in log.entries"
+        v-for="entry in log.filteredEntries"
         :key="entry.id"
         class="log-line"
         :class="levelClass(entry.level)"
       >
-        <span class="log-time">[{{ formatTime(entry.time) }}]</span>
-        <span class="log-level">[{{ entry.level }}]</span>
+        <span class="log-time">[{{ formatLogTime(entry.time) }}]</span>
+        <span class="log-level">[{{ LOG_LEVEL_LABEL[entry.level] }}]</span>
         <span class="log-message">{{ entry.message }}</span>
       </div>
     </div>
@@ -56,15 +108,23 @@ watch(
   background: #24292f;
   color: #c9d1d9;
   border-top: 1px solid #30363d;
-  max-height: 8rem;
-  min-height: 5rem;
+  min-height: 6.5rem;
+  max-height: 12rem;
 }
 
 .log-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 0.35rem 0.75rem;
   margin-bottom: 0.25rem;
+}
+
+.log-title {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
 }
 
 .log-header h2 {
@@ -74,6 +134,40 @@ watch(
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #8b949e;
+}
+
+.log-count {
+  font-size: 0.72rem;
+  color: #6e7681;
+}
+
+.log-controls {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+}
+
+.control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: #8b949e;
+}
+
+.control.checkbox {
+  cursor: pointer;
+  user-select: none;
+}
+
+.control-select {
+  padding: 0.1rem 0.3rem;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  background: #21262d;
+  color: #c9d1d9;
+  font-size: 0.72rem;
 }
 
 .clear-btn {
@@ -97,6 +191,7 @@ watch(
   font-family: ui-monospace, monospace;
   font-size: 0.8rem;
   line-height: 1.45;
+  min-height: 0;
 }
 
 .log-empty {

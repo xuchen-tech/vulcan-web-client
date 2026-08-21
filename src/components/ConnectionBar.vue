@@ -25,6 +25,10 @@ function onConnect(): void {
   void connection.connect()
 }
 
+function onReconnect(): void {
+  void connection.reconnect()
+}
+
 function onDisconnect(): void {
   void connection.disconnect()
 }
@@ -153,10 +157,10 @@ function onKeyFile(event: Event): void {
       <button
         type="button"
         class="btn btn-connect"
-        :disabled="connection.isConnected || connection.isBusy"
-        @click="onConnect"
+        :disabled="!connection.canConnect"
+        @click="connection.isFailed ? onReconnect() : onConnect()"
       >
-        Connect
+        {{ connection.connectButtonLabel }}
       </button>
       <button
         type="button"
@@ -168,7 +172,11 @@ function onKeyFile(event: Event): void {
       </button>
     </div>
 
-    <div class="status-wrap" :title="connection.error ?? undefined">
+    <div
+      class="status-wrap"
+      :class="{ 'status-wrap-failed': connection.isFailed }"
+      :title="connection.error ?? undefined"
+    >
       <span class="status-dot" :class="statusClass" />
       <span class="status-text">{{ connection.statusLabel }}</span>
       <span v-if="connection.error" class="status-error">{{ connection.error }}</span>
@@ -319,6 +327,10 @@ function onKeyFile(event: Event): void {
 .status-text {
   font-size: 0.85rem;
   white-space: nowrap;
+}
+
+.status-wrap-failed .status-text {
+  color: #ffa198;
 }
 
 .status-error {

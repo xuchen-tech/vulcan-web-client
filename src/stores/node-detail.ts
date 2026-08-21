@@ -7,6 +7,7 @@ import { readAttributes } from '@/opcua/attributes'
 import { readReferences } from '@/opcua/references'
 import { readValue, writeValue } from '@/opcua/readwrite'
 import type { AttrRow, RefRow, ValueReadResult } from '@/opcua/types'
+import { logActionError } from '@/shared/error-message'
 
 import { useAddressSpaceStore } from './address-space'
 import { useConnectionStore } from './connection'
@@ -59,12 +60,11 @@ export const useNodeDetailStore = defineStore('nodeDetail', () => {
       attributes.value = attrsResult.value
       attrsError.value = null
     } else {
-      const message =
-        attrsResult.reason instanceof Error
-          ? attrsResult.reason.message
-          : String(attrsResult.reason)
-      attrsError.value = message
-      log.err(`读取属性失败 (${nodeId}): ${message}`)
+      attrsError.value = logActionError(
+        log,
+        `读取属性失败 (${nodeId})`,
+        attrsResult.reason,
+      )
     }
     attrsLoading.value = false
 
@@ -75,12 +75,11 @@ export const useNodeDetailStore = defineStore('nodeDetail', () => {
         `节点 ${nodeId}：${attributes.value.length} 项属性，${references.value.length} 条引用`,
       )
     } else {
-      const message =
-        refsResult.reason instanceof Error
-          ? refsResult.reason.message
-          : String(refsResult.reason)
-      refsError.value = message
-      log.err(`读取引用失败 (${nodeId}): ${message}`)
+      refsError.value = logActionError(
+        log,
+        `读取引用失败 (${nodeId})`,
+        refsResult.reason,
+      )
     }
     refsLoading.value = false
   }
@@ -144,8 +143,7 @@ export const useNodeDetailStore = defineStore('nodeDetail', () => {
         )
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      log.err(`读 Value 失败 (${nodeId}): ${message}`)
+      logActionError(log, `读 Value 失败 (${nodeId})`, err)
     } finally {
       valueBusy.value = false
     }
@@ -185,8 +183,7 @@ export const useNodeDetailStore = defineStore('nodeDetail', () => {
 
       return true
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      log.err(`写 Value 失败 (${nodeId}): ${message}`)
+      logActionError(log, `写 Value 失败 (${nodeId})`, err)
       return false
     } finally {
       valueBusy.value = false

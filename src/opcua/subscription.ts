@@ -28,6 +28,7 @@ export type MonitorRowUpdate = Partial<
 >
 
 type RowUpdateHandler = (nodeId: string, update: MonitorRowUpdate) => void
+type PollErrorHandler = (nodeId: string, err: unknown) => void
 
 interface ManagedMonitor {
   monitoredItem: MonitoredItem | null
@@ -45,11 +46,16 @@ export class SubscriptionManager {
   private settings: SubscriptionSettings = { ...DEFAULT_SETTINGS }
   private items = new Map<string, ManagedMonitor>()
   private updateHandler: RowUpdateHandler | null = null
+  private pollErrorHandler: PollErrorHandler | null = null
   private degraded = false
   private pollTimer: ReturnType<typeof setInterval> | null = null
 
   setUpdateHandler(handler: RowUpdateHandler | null): void {
     this.updateHandler = handler
+  }
+
+  setPollErrorHandler(handler: PollErrorHandler | null): void {
+    this.pollErrorHandler = handler
   }
 
   getSettings(): SubscriptionSettings {
@@ -240,8 +246,8 @@ export class SubscriptionManager {
       try {
         const result = await readValue(nodeId)
         this.emitUpdate(nodeId, valueReadToMonitorUpdate(result))
-      } catch {
-        /* 单点轮询失败不影响其他行 */
+      } catch (err) {
+        this.pollErrorHandler?.(nodeId, err)
       }
     }
   }

@@ -5,6 +5,7 @@ import { NodeClass } from '@wsopcua/wsopcua/data-model'
 
 import { browseChildren, ROOT_FOLDER_NODE_ID } from '@/opcua/browse'
 import type { NodeInfo } from '@/opcua/types'
+import { logActionError } from '@/shared/error-message'
 
 import { useLogStore } from './log'
 
@@ -51,10 +52,8 @@ export const useAddressSpaceStore = defineStore('addressSpace', () => {
       }
       log.ok(`地址空间已加载（Root 下 ${children.length} 项）`)
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      error.value = message
+      error.value = logActionError(log, '浏览地址空间失败', err)
       root.value = null
-      log.err(`浏览地址空间失败: ${message}`)
     } finally {
       loading.value = false
     }
@@ -83,9 +82,7 @@ export const useAddressSpaceStore = defineStore('addressSpace', () => {
       node.isLeaf = children.length === 0
       node.hasChildren = children.length > 0
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      error.value = message
-      log.err(`浏览 ${nodeId} 失败: ${message}`)
+      error.value = logActionError(log, `浏览 ${nodeId} 失败`, err)
     } finally {
       node.loading = false
     }

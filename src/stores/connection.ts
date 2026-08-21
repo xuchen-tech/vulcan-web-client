@@ -13,6 +13,7 @@ import {
   requiresClientCertificate,
   validateEndpointUrl,
 } from '@/opcua/types'
+import { logActionError, toErrorMessage } from '@/shared/error-message'
 
 import { useLogStore } from './log'
 
@@ -38,6 +39,11 @@ export const useConnectionStore = defineStore('connection', () => {
   const isBusy = computed(
     () => status.value === 'connecting' || status.value === 'reconnecting',
   )
+  const isFailed = computed(() => status.value === 'failed')
+  const canConnect = computed(() => !isConnected.value && !isBusy.value)
+  const connectButtonLabel = computed(() =>
+    isFailed.value ? 'Reconnect' : 'Connect',
+  )
   const needsClientCertificate = computed(() =>
     requiresClientCertificate(securityMode.value, securityPolicy.value),
   )
@@ -51,8 +57,18 @@ export const useConnectionStore = defineStore('connection', () => {
     }
 
     teardown = opcuaClientService.onStateChange((nextStatus, nextError) => {
+      const previous = status.value
       status.value = nextStatus
       error.value = nextError ?? null
+
+      const log = useLogStore()
+      if (
+        previous === 'connected' &&
+        nextStatus === 'failed' &&
+        nextError
+      ) {
+        log.warn(`连接中断: ${nextError}`)
+      }
     })
 
     window.addEventListener('beforeunload', onBeforeUnload)
@@ -85,21 +101,25 @@ export const useConnectionStore = defineStore('connection', () => {
     } catch (err) {
       if (err instanceof InvalidEndpointUrlError) {
         log.err(err.message)
+        status.value = 'failed'
+        error.value = err.message
         return
       }
       throw err
     }
 
     if (needsClientCertificate.value && !hasClientCertificate.value) {
-      log.err(
-        'SignAndEncrypt 需要客户端证书：请选择 client_cert.pem 与 client_key.pem，并确保证书已在服务端 ApplCerts/trusted/certs/ 中信任',
-      )
+      const message =
+        'SignAndEncrypt 需要客户端证书：请选择 client_cert.pem 与 client_key.pem，并确保证书已在服务端 ApplCerts/trusted/certs/ 中信任'
+      log.err(message)
+      status.value = 'failed'
+      error.value = message
       return
     }
 
     try {
       log.info(
-        `连接 ${endpoint}（${securityMode.value}/${securityPolicy.value}）…`,
+        `${isFailed.value ? '重连' : '连接'} ${endpoint}（${securityMode.value}/${securityPolicy.value}）…`,
       )
       await opcuaClientService.connect({
         url: endpoint,
@@ -119,10 +139,9 @@ export const useConnectionStore = defineStore('connection', () => {
       })
       log.ok(`会话建立成功（${endpoint}）`)
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
       log.err(
         formatConnectErrorHint(
-          message,
+          toErrorMessage(err),
           endpoint,
           securityMode.value,
           securityPolicy.value,
@@ -132,14 +151,17 @@ export const useConnectionStore = defineStore('connection', () => {
     }
   }
 
+  async function reconnect(): Promise<void> {
+    await connect()
+  }
+
   async function disconnect(): Promise<void> {
     const log = useLogStore()
     try {
       await opcuaClientService.disconnect()
       log.ok('已断开连接')
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      log.err(`断开异常: ${message}`)
+      logActionError(log, '断开异常', err)
     }
   }
 
@@ -157,6 +179,9 @@ export const useConnectionStore = defineStore('connection', () => {
     statusLabel,
     isConnected,
     isBusy,
+    isFailed,
+    canConnect,
+    connectButtonLabel,
     needsClientCertificate,
     hasClientCertificate,
     init,
@@ -164,6 +189,7 @@ export const useConnectionStore = defineStore('connection', () => {
     loadClientCertificate,
     loadClientKey,
     connect,
+    reconnect,
     disconnect,
   }
 })

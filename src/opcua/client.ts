@@ -3,6 +3,7 @@ import {
   OPCUAClient,
   SecurityPolicy,
   type ClientSession,
+  type StatusCode,
 } from '@wsopcua/wsopcua'
 import { PEMDERCertificateStore } from '@wsopcua/wsopcua/common'
 
@@ -21,14 +22,28 @@ export type ConnectionStateListener = (
   error?: string,
 ) => void
 
+type DetachHandler = () => void
+
 export class OpcuaClientService {
   private client: OPCUAClient | null = null
   private session: ClientSession | null = null
   private listeners = new Set<ConnectionStateListener>()
+  private detachHandlers: DetachHandler[] = []
+  private status: ConnectionStatus = 'disconnected'
+  private lastError?: string
 
   onStateChange(listener: ConnectionStateListener): () => void {
     this.listeners.add(listener)
+    listener(this.status, this.lastError)
     return () => this.listeners.delete(listener)
+  }
+
+  getStatus(): ConnectionStatus {
+    return this.status
+  }
+
+  getLastError(): string | undefined {
+    return this.lastError
   }
 
   isConnected(): boolean {
@@ -55,6 +70,7 @@ export class OpcuaClientService {
 
       const sessionOptions = buildSessionOptions(options)
       this.session = await this.client.createSessionP(sessionOptions)
+      this.attachRuntimeHandlers(this.client, this.session)
       this.emitState('connected')
     } catch (err) {
       await this.cleanup()
@@ -69,7 +85,39 @@ export class OpcuaClientService {
     this.emitState('disconnected')
   }
 
+  private attachRuntimeHandlers(
+    client: OPCUAClient,
+    session: ClientSession,
+  ): void {
+    const onConnectionLost = (): void => {
+      void this.handleRemoteDisconnect('WebSocket 连接已丢失')
+    }
+    const onSessionClosed = (status: StatusCode): void => {
+      const detail = status.description || status.toString()
+      void this.handleRemoteDisconnect(`会话已关闭 (${detail})`)
+    }
+
+    client.on('connection_lost', onConnectionLost)
+    session.on('session_closed', onSessionClosed)
+
+    this.detachHandlers.push(() => {
+      client.off('connection_lost', onConnectionLost)
+      session.off('session_closed', onSessionClosed)
+    })
+  }
+
+  private async handleRemoteDisconnect(reason: string): Promise<void> {
+    if (!this.session && !this.client) {
+      return
+    }
+
+    await this.cleanup()
+    this.emitState('failed', reason)
+  }
+
   private async cleanup(): Promise<void> {
+    this.detachRuntimeHandlers()
+
     const session = this.session
     const client = this.client
     this.session = null
@@ -92,7 +140,16 @@ export class OpcuaClientService {
     }
   }
 
+  private detachRuntimeHandlers(): void {
+    for (const detach of this.detachHandlers) {
+      detach()
+    }
+    this.detachHandlers = []
+  }
+
   private emitState(status: ConnectionStatus, error?: string): void {
+    this.status = status
+    this.lastError = error
     for (const listener of this.listeners) {
       listener(status, error)
     }

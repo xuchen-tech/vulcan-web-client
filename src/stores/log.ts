@@ -1,7 +1,9 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 export type LogLevel = 'info' | 'ok' | 'warn' | 'err'
+
+export type LogFilter = LogLevel | 'all'
 
 export interface LogEntry {
   id: number
@@ -12,8 +14,17 @@ export interface LogEntry {
 
 const MAX_ENTRIES = 500
 
+export const LOG_LEVEL_LABEL: Record<LogLevel, string> = {
+  info: 'INFO',
+  ok: 'OK',
+  warn: 'WARN',
+  err: 'ERR',
+}
+
 export const useLogStore = defineStore('log', () => {
   const entries = ref<LogEntry[]>([])
+  const filterLevel = ref<LogFilter>('all')
+  const autoScroll = ref(true)
   let nextId = 1
 
   function append(level: LogLevel, message: string): void {
@@ -48,8 +59,32 @@ export const useLogStore = defineStore('log', () => {
     entries.value = []
   }
 
+  const filteredEntries = computed(() => {
+    if (filterLevel.value === 'all') {
+      return entries.value
+    }
+    return entries.value.filter((entry) => entry.level === filterLevel.value)
+  })
+
+  const levelCounts = computed(() => {
+    const counts: Record<LogLevel, number> = {
+      info: 0,
+      ok: 0,
+      warn: 0,
+      err: 0,
+    }
+    for (const entry of entries.value) {
+      counts[entry.level] += 1
+    }
+    return counts
+  })
+
   return {
     entries,
+    filterLevel,
+    autoScroll,
+    filteredEntries,
+    levelCounts,
     append,
     info,
     ok,

@@ -10,7 +10,7 @@
 | --- | --- |
 | Node.js | **>= 18**（见 `package.json` engines） |
 | npm | 随 Node 安装 |
-| vulcan_server | 需启用 WebSocket 端点（见下文） |
+| vulcan_server | 联调/冒烟需启用 WebSocket 端点（见下文） |
 
 ## 安装与编译
 
@@ -24,7 +24,9 @@ npm install
 | `npm run dev` | 开发模式（Vite 热更新，默认 `http://localhost:5173`） |
 | `npm run build` | 类型检查 + 生产构建，产物在 `dist/` |
 | `npm run preview` | 本地预览 `dist/` 静态站点（默认 `http://localhost:4173`） |
-| `npm run test` | Vitest 单元测试（无需启动服务器） |
+| `npm run test` | Vitest 单元测试（**无需**启动服务器） |
+| `npm run test:e2e` | Node 端到端冒烟（**需** `vulcan_server --ws` 已运行） |
+| `npm run smoke` | Vitest + e2e 一键冒烟（`test/run_smoke.sh`） |
 
 ## 运行（联调 vulcan_server）
 
@@ -79,7 +81,7 @@ npm run build
 npm run preview   # 或把 dist/ 部署到任意静态 HTTP 服务器
 ```
 
-## 前端 Web 页面测试
+## 自动化测试
 
 ### 单元测试（Vitest）
 
@@ -89,67 +91,110 @@ npm run preview   # 或把 dist/ 部署到任意静态 HTTP 服务器
 npm run test
 ```
 
-当前覆盖：工程脚手架、OPC UA URL/安全策略校验、连接 store（非法 URL 拒绝、连接成功/失败日志等）。
+覆盖：URL/安全策略校验、format/类型推断、store mock、日志与错误处理 helper 等。
 
-### 手动浏览器联调（推荐）
+### 端到端冒烟（Node + wsopcua）
 
-在 `vulcan_server` 与 `npm run dev` 均已启动的前提下，按下列步骤验证：
-
-#### 连接与会话（阶段 1）
-
-1. 打开 `http://localhost:5173`，确认三栏布局与底部日志面板可见，控制台无报错。
-2. URL 保持 `ws://127.0.0.1:4843/opcua`，Security/Policy 为 `None`，点击 **Connect**。
-3. **预期**：状态点变绿，日志 `会话建立成功`。
-4. 点击 **Disconnect**，**预期**：状态回「未连接」，日志 `已断开连接`。
-5. **负向**：停止 `vulcan_server` 后点 Connect，**预期**：状态「失败」，日志含连接错误，页面不崩溃。
-6. **负向**：URL 改为 `opc.tcp://127.0.0.1:4840` 后 Connect，**预期**：日志提示非法 URL，不发起连接。
-
-#### 地址空间 / 读写在后续阶段验收
-
-当前 UI 中 Address Space、Data Access、Attributes、References 为占位面板；完整浏览、属性、监视、读写等功能按 [docs/03-implementation.md](docs/03-implementation.md) 阶段 2–8 逐步实现。联调时可先用服务端冒烟客户端确认模型与变量可用：
+假定 `vulcan_server` **已在运行**（同上 `4840 --ws 4843`）：
 
 ```bash
-# TCP 端点读 Server 状态
-./vulcan/build/vulcan_smoke_client opc.tcp://127.0.0.1:4840
+# 仅 e2e
+npm run test:e2e
 
-# 若已加载 demo 模型，可读 Speed 等变量（ns 以启动日志为准）
-./vulcan/build/vulcan_smoke_client opc.tcp://127.0.0.1:4840 ns=3;i=6011
+# Vitest + e2e 一键（推荐联调收尾）
+npm run smoke
 ```
 
-#### 使用 wss + 证书（生产/安全联调）
+也可直接：
 
-1. 启动：`vulcan_server 4840 --pki /path/to/pki --ws 4843`
-2. 页面 URL 改为 `wss://127.0.0.1:4843/opcua`
-3. Security 选 `SignAndEncrypt`，Policy 选 `Basic256Sha256`
-4. 上传已在服务端 `ApplCerts/trusted/certs/` 信任的客户端 PEM 证书与私钥
-5. 浏览器首次访问自签名 `wss` 时可能需手动信任服务器证书
+```bash
+bash test/run_smoke.sh
+```
 
-更完整的 wss 自动化冒烟见 `vulcan/web/test/run_ws_web_client_test.sh`（Node 端 `@wsopcua/wsopcua`，与浏览器同一协议栈）。
+冒烟步骤（`test/e2e_smoke.mjs`）：
 
-### 浏览器开发者工具检查
+1. WebSocket 连接 + 建立会话  
+2. 浏览 RootFolder (`i=84`)  
+3. 读/写/读回 `ns=3;s=CONFIG.RESOURCE1.Task1.Drive.Speed`  
+4. 对 `Counter` 创建 Subscription + MonitoredItem（等待通知或读回退）  
+5. 调用标准方法 `Server.GetMonitoredItems`（可选，`WSOPCUA_SKIP_METHOD=1` 跳过）  
 
-联调时打开 DevTools：
+环境变量：
 
-- **Console**：不应有未捕获异常；连接失败时错误信息应可读。
-- **Network → WS**：Connect 后应看到对 `4843` 的 WebSocket 升级与 UACP 二进制帧（失败时为连接被拒绝或握手错误）。
+| 变量 | 默认 | 说明 |
+| --- | --- | --- |
+| `WSOPCUA_URL` | `ws://127.0.0.1:4843/opcua` | WebSocket 端点 |
+| `WSOPCUA_SPEED_NODE` | `ns=3;s=CONFIG.RESOURCE1.Task1.Drive.Speed` | 读写变量 |
+| `WSOPCUA_COUNTER_NODE` | `ns=3;s=CONFIG.RESOURCE1.Task1.PLC.Counter` | 订阅/写入变量 |
+| `WSOPCUA_USER` / `WSOPCUA_PASSWORD` | — | 可选；明文 `opc.ws://` 端点通常仅 Anonymous，写值会 SKIP |
+| `WSOPCUA_SKIP_METHOD` | — | 设为 `1` 跳过方法 Call |
+
+wss + 证书自动化可参考 `vulcan/web/test/run_ws_web_client_test.sh`（SignAndEncrypt 场景）。
+
+## 手动浏览器联调（全流程）
+
+在 `vulcan_server` 与 `npm run dev` 均已启动的前提下：
+
+### 连接与会话
+
+1. 打开 `http://localhost:5173`，确认三栏布局 + 底部 Log 面板。  
+2. Connect → 状态绿点「已连接」。  
+3. Disconnect → 「未连接」。  
+4. 停止 server 后 Connect → 「失败」+ **Reconnect**，页面不崩溃。
+
+### 地址空间 / 属性 / 引用
+
+1. 连接后左侧展开 **Root → Objects → PlcType → …**  
+2. 选中 Variable（如 **Counter**），右侧 Attributes 显示 NodeClass、DataType、Value 等。  
+3. References 面板列出正/反向引用。
+
+### 读 / 写 Value
+
+1. 选中可写 Variable（如 **Speed** / **Counter**）。  
+2. Attributes 面板 **读 Value** / **写 Value**（对话框输入，写后读回）。
+
+### Data Access 监视
+
+1. 选中 Variable → **加入监视**（或拖到 Data Access 区域）。  
+2. 监视表出现一行，Value 随 server 假数据更新。  
+3. 可调整发布/采样间隔，行内写值、移除行。
+
+### 方法调用（可选）
+
+1. 展开 **Objects → Server**，选中 Method（如 **GetMonitoredItems**）。  
+2. Attributes → **调用方法**，查看入参/出参定义并执行 Call。
+
+### 日志
+
+- 底部 Log 支持级别筛选、自动滚动、毫秒时间戳。  
+- 任一面板失败时，Log 出现 ERR/WARN，其他面板仍可操作。
+
+### 开发者工具
+
+- **Console**：无未捕获异常。  
+- **Network → WS**：Connect 后可见 `4843` WebSocket 二进制帧。
 
 ## 目录结构（简要）
 
 ```text
 vulcan-web-client/
 ├── src/
-│   ├── opcua/           # OPC UA 客户端封装
-│   ├── stores/          # Pinia（connection、log 等）
-│   ├── components/      # ConnectionBar、LogPanel 等
+│   ├── opcua/           # OPC UA service 层（client/browse/readwrite/subscription/method…）
+│   ├── stores/          # Pinia stores
+│   ├── components/      # UI 面板与对话框
 │   └── App.vue
-├── test/                # Vitest 用例
+├── test/
+│   ├── e2e_smoke.mjs    # Node 端到端冒烟
+│   ├── run_smoke.sh     # Vitest + e2e 一键脚本
+│   ├── browser_shim.mjs # Node WebSocket/crypto shim
+│   └── **/*.test.ts     # Vitest 单元测试
 ├── docs/                # 需求 / 设计 / 实施文档
-├── dist/                # npm run build 产物
-└── package.json
+└── dist/                # npm run build 产物
 ```
 
 ## 相关文档
 
-- [docs/README.md](docs/README.md) — 需求、设计、分阶段验收
-- [../vulcan/README.md](../vulcan/README.md) — 构建与启动 `vulcan_server`、WebSocket 端点
-- [../docs/08-websocket-transport.md](../docs/08-websocket-transport.md) — WebSocket 传输选型
+- [docs/README.md](docs/README.md) — 需求、设计、分阶段验收（阶段 0–8）  
+- [docs/03-implementation.md](docs/03-implementation.md) — 各阶段 AC 清单  
+- [../vulcan/README.md](../vulcan/README.md) — 构建与启动 `vulcan_server`  
+- [../docs/08-websocket-transport.md](../docs/08-websocket-transport.md) — WebSocket 传输说明  
