@@ -1,9 +1,12 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+
+import { AttributeIds } from '@wsopcua/wsopcua'
 
 import { readAttributes } from '@/opcua/attributes'
 import { readReferences } from '@/opcua/references'
-import type { AttrRow, RefRow } from '@/opcua/types'
+import { readValue, writeValue } from '@/opcua/readwrite'
+import type { AttrRow, RefRow, ValueReadResult } from '@/opcua/types'
 
 import { useAddressSpaceStore } from './address-space'
 import { useConnectionStore } from './connection'
@@ -16,6 +19,7 @@ export const useNodeDetailStore = defineStore('nodeDetail', () => {
   const refsLoading = ref(false)
   const attrsError = ref<string | null>(null)
   const refsError = ref<string | null>(null)
+  const valueBusy = ref(false)
 
   let loadToken = 0
   let stopWatch: (() => void) | null = null
@@ -81,6 +85,114 @@ export const useNodeDetailStore = defineStore('nodeDetail', () => {
     refsLoading.value = false
   }
 
+  const currentValueText = computed(() => attributeDisplay('Value'))
+  const dataTypeHint = computed(() => attributeDisplay('DataType'))
+  const valueRankHint = computed(() => parseValueRank(attributeDisplay('ValueRank')))
+  const canReadWriteValue = computed(
+    () => useAddressSpaceStore().isSelectedVariable,
+  )
+
+  function attributeDisplay(name: string): string | undefined {
+    const row = attributes.value.find((item) => item.attributeName === name)
+    return row?.displayValue
+  }
+
+  function parseValueRank(text: string | undefined): number | undefined {
+    if (text == null || text === '—' || text === '<null>') {
+      return undefined
+    }
+    const parsed = Number(text)
+    return Number.isFinite(parsed) ? parsed : undefined
+  }
+
+  function applyValueReadResult(result: ValueReadResult): void {
+    const index = attributes.value.findIndex(
+      (row) => row.attributeId === AttributeIds.Value,
+    )
+    if (index < 0) {
+      return
+    }
+
+    attributes.value[index] = {
+      attributeId: AttributeIds.Value,
+      attributeName: 'Value',
+      displayValue: result.displayValue,
+      statusCode: result.statusCode,
+      isError: result.isError,
+      detail: result.detail || undefined,
+    }
+  }
+
+  async function readSelectedValue(): Promise<void> {
+    const addressSpace = useAddressSpaceStore()
+    const nodeId = addressSpace.selectedNodeId
+    if (!nodeId) {
+      return
+    }
+
+    const log = useLogStore()
+    valueBusy.value = true
+
+    try {
+      const result = await readValue(nodeId)
+      applyValueReadResult(result)
+      if (result.isError) {
+        log.err(`读 Value ${nodeId}: ${result.statusCode}`)
+      } else {
+        log.ok(
+          `读 Value ${nodeId} = ${result.displayValue} (${result.statusCode})`,
+        )
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      log.err(`读 Value 失败 (${nodeId}): ${message}`)
+    } finally {
+      valueBusy.value = false
+    }
+  }
+
+  async function writeSelectedValue(inputText: string): Promise<boolean> {
+    const addressSpace = useAddressSpaceStore()
+    const nodeId = addressSpace.selectedNodeId
+    if (!nodeId) {
+      return false
+    }
+
+    const log = useLogStore()
+    valueBusy.value = true
+
+    try {
+      const result = await writeValue(nodeId, inputText, {
+        dataTypeNodeId: dataTypeHint.value,
+        valueRank: valueRankHint.value,
+      })
+
+      if (!result.writeOk) {
+        log.err(
+          `写 Value ${nodeId} = ${result.writtenValue} -> ${result.writeStatusCode}`,
+        )
+        return false
+      }
+
+      log.ok(
+        `写 Value ${nodeId} = ${result.writtenValue} -> ${result.writeStatusCode}`,
+      )
+
+      if (result.readBack) {
+        applyValueReadResult(result.readBack)
+        log.ok(`读回 ${nodeId} = ${result.readBack.displayValue}`)
+      }
+
+      return true
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      log.err(`写 Value 失败 (${nodeId}): ${message}`)
+      return false
+    } finally {
+      valueBusy.value = false
+    }
+  }
+
   function init(): void {
     if (stopWatch) {
       return
@@ -118,8 +230,15 @@ export const useNodeDetailStore = defineStore('nodeDetail', () => {
     refsLoading,
     attrsError,
     refsError,
+    valueBusy,
+    currentValueText,
+    dataTypeHint,
+    valueRankHint,
+    canReadWriteValue,
     clear,
     loadForNode,
+    readSelectedValue,
+    writeSelectedValue,
     init,
     dispose,
   }

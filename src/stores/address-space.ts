@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { NodeClass } from '@wsopcua/wsopcua/data-model'
 
@@ -116,6 +116,21 @@ export const useAddressSpaceStore = defineStore('addressSpace', () => {
     selectedNodeId.value = nodeId
   }
 
+  function getSelectedNode(): TreeNode | null {
+    if (!selectedNodeId.value) {
+      return null
+    }
+    return findNode(root.value, selectedNodeId.value)
+  }
+
+  function isVariableNode(nodeClass: NodeClass | undefined): boolean {
+    return nodeClass === NodeClass.Variable
+  }
+
+  const isSelectedVariable = computed(() =>
+    isVariableNode(getSelectedNode()?.nodeClass),
+  )
+
   return {
     root,
     selectedNodeId,
@@ -127,6 +142,9 @@ export const useAddressSpaceStore = defineStore('addressSpace', () => {
     collapseNode,
     toggleNode,
     selectNode,
+    getSelectedNode,
+    isVariableNode,
+    isSelectedVariable,
   }
 })
 

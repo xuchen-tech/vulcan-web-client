@@ -5,21 +5,26 @@ import ConnectionBar from '@/components/ConnectionBar.vue'
 import AddressSpaceTree from '@/components/AddressSpaceTree.vue'
 import AttributesPanel from '@/components/AttributesPanel.vue'
 import ReferencesPanel from '@/components/ReferencesPanel.vue'
+import DataAccessView from '@/components/DataAccessView.vue'
 import LogPanel from '@/components/LogPanel.vue'
 import { useConnectionStore } from '@/stores/connection'
+import { useMonitorStore } from '@/stores/monitor'
 import { useNodeDetailStore } from '@/stores/node-detail'
 
 const connectionStore = useConnectionStore()
 const nodeDetailStore = useNodeDetailStore()
+const monitorStore = useMonitorStore()
 
 onMounted(() => {
   connectionStore.init()
   nodeDetailStore.init()
+  monitorStore.init()
 })
 
 onUnmounted(() => {
   connectionStore.dispose()
   nodeDetailStore.dispose()
+  void monitorStore.dispose()
 })
 </script>
 
@@ -35,7 +40,7 @@ onUnmounted(() => {
 
       <section class="panel data-access">
         <h2>Data Access</h2>
-        <p class="placeholder">监视表 — NodeId / Value / TS / StatusCode</p>
+        <DataAccessView />
       </section>
 
       <aside class="panel right-stack">
@@ -79,8 +84,14 @@ onUnmounted(() => {
   min-height: 0;
 }
 
-.address-space {
+.address-space,
+.data-access {
   overflow: hidden;
+}
+
+.panel :deep(.data-access-view) {
+  flex: 1;
+  min-height: 0;
 }
 
 .panel:last-child {

@@ -12,7 +12,7 @@ import {
   nodeClassName,
   variantToDisplay,
 } from './format'
-import { statusCodeToText, statusIsBad } from './status'
+import { resolveDataValueStatus } from './status'
 import type { AttrRow } from './types'
 
 interface AttributeSpec {
@@ -62,25 +62,14 @@ function dataValueToAttrRow(
   spec: AttributeSpec,
   dataValue: DataValue | undefined,
 ): AttrRow {
-  if (!dataValue || !dataValue.statusCode) {
+  const resolved = resolveDataValueStatus(dataValue)
+
+  if (resolved.isError) {
     return {
       attributeId: spec.id,
       attributeName: spec.name,
-      displayValue: '—',
-      statusCode: 'BadNoData',
-      isError: true,
-    }
-  }
-
-  const statusText = statusCodeToText(dataValue.statusCode)
-  const isError = statusIsBad(dataValue.statusCode)
-
-  if (isError) {
-    return {
-      attributeId: spec.id,
-      attributeName: spec.name,
-      displayValue: statusText,
-      statusCode: statusText,
+      displayValue: resolved.text,
+      statusCode: resolved.text,
       isError: true,
     }
   }
@@ -91,7 +80,7 @@ function dataValueToAttrRow(
       attributeId: spec.id,
       attributeName: spec.name,
       displayValue: formatted.displayValue,
-      statusCode: statusText,
+      statusCode: resolved.text,
       isError: false,
       detail: formatted.detail,
     }
@@ -100,8 +89,8 @@ function dataValueToAttrRow(
   return {
     attributeId: spec.id,
     attributeName: spec.name,
-    displayValue: formatAttributeValue(spec.id, dataValue),
-    statusCode: statusText,
+    displayValue: formatAttributeValue(spec.id, dataValue!),
+    statusCode: resolved.text,
     isError: false,
   }
 }

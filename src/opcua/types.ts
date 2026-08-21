@@ -159,3 +159,37 @@ export interface RefRow {
   targetNodeClass: string
   typeDefinition: string
 }
+
+export interface ValueReadResult {
+  nodeId: string
+  displayValue: string
+  detail: string
+  statusCode: string
+  isError: boolean
+}
+
+export interface WriteValueResult {
+  nodeId: string
+  writtenValue: string
+  writeStatusCode: string
+  writeOk: boolean
+  readBack?: ValueReadResult
+}
+
+export interface MonitorRow {
+  nodeId: string
+  label: string
+  value: string
+  dataType: string
+  sourceTimestamp: string
+  serverTimestamp: string
+  statusCode: string
+  isError: boolean
+  writeBusy: boolean
+}
+
+export interface SubscriptionSettings {
+  publishingInterval: number
+  samplingInterval: number
+  queueSize: number
+}

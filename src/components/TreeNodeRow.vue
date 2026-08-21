@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { NodeClass } from '@wsopcua/wsopcua/data-model'
+
+import { encodeDraggedNode, OPCUA_NODE_DRAG_TYPE } from '@/shared/drag-drop'
 import { nodeClassIcon, nodeClassLabel } from '@/shared/nodeclass-icons'
 import type { TreeNode } from '@/stores/address-space'
 
@@ -18,6 +21,7 @@ const emit = defineEmits<{
 }>()
 
 const isSelected = computed(() => props.selectedNodeId === props.node.nodeId)
+const isDraggable = computed(() => props.node.nodeClass === NodeClass.Variable)
 const showExpand = computed(() => !props.node.isLeaf)
 const expandLabel = computed(() => {
   if (props.node.loading) {
@@ -34,15 +38,32 @@ function onToggleClick(event: MouseEvent): void {
   event.stopPropagation()
   emit('toggle', props.node.nodeId)
 }
+
+function onDragStart(event: DragEvent): void {
+  if (!isDraggable.value || !event.dataTransfer) {
+    return
+  }
+
+  event.dataTransfer.setData(
+    OPCUA_NODE_DRAG_TYPE,
+    encodeDraggedNode({
+      nodeId: props.node.nodeId,
+      displayName: props.node.displayName,
+    }),
+  )
+  event.dataTransfer.effectAllowed = 'copy'
+}
 </script>
 
 <template>
   <li class="tree-node">
     <div
       class="tree-row"
-      :class="{ selected: isSelected }"
+      :class="{ selected: isSelected, draggable: isDraggable }"
       :style="{ paddingLeft: `${depth * 0.85 + 0.25}rem` }"
+      :draggable="isDraggable"
       @click="onRowClick"
+      @dragstart="onDragStart"
     >
       <button
         v-if="showExpand"
@@ -106,6 +127,14 @@ function onToggleClick(event: MouseEvent): void {
 
 .tree-row.selected {
   background: #ddf4ff;
+}
+
+.tree-row.draggable {
+  cursor: grab;
+}
+
+.tree-row.draggable:active {
+  cursor: grabbing;
 }
 
 .expand-btn {
