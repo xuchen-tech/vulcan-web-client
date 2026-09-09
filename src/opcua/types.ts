@@ -248,3 +248,21 @@ export interface HistoryReadOutcome {
   samples: HistorySample[]
   truncated: boolean
 }
+
+export interface ParsedOpcUaEvent {
+  nodeId: string
+  label: string
+  fields: Record<string, string>
+  time: string
+  severity: string
+  message: string
+  sourceName: string
+  eventType: string
+}
+
+export interface EventRow extends ParsedOpcUaEvent {
+  id: number
+  receivedAt: string
+}
+
+export type MiddlePanelTab = 'data-access' | 'events'

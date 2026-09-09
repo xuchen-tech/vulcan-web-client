@@ -249,8 +249,39 @@
 
 ---
 
+## 阶段 10：事件视图（Event View）
+
+**目标**：对标 UaExpert Event View 基础能力——订阅 EventNotifier、展示 BaseEvent
+字段；为 vulcan G-V-09（服务端 triggerEvent）预留客户端链路。
+
+**产出**：`src/opcua/events.ts`、`src/opcua/event-parse.ts`、
+`src/stores/events.ts`、`src/components/EventView.vue`、
+`src/components/MiddleWorkspace.vue`（Data Access / Events 标签），
+Attributes「订阅事件」入口。
+
+**做法要点**：
+- `EventSubscriptionManager`：`ClientSubscription.monitorP` 监视
+  `AttributeIds.EventNotifier`，`EventFilter` 选择 Time/Severity/Message 等。
+- Pinia `events` store 维护事件列表（最新在前，上限 500）、订阅节点集合；
+  断线自动 dispose。
+- 中间栏 Monitor 面板内切换 Data Access / Events；无事件时提示 vulcan 尚未发出
+  OPC UA 业务事件。
+- e2e：对 Server（`i=2253`）创建事件 MonitoredItem；无通知时 SKIP。
+
+**验收标准**：
+- AC-10.1 连接后订阅 Server 事件源，Events 标签显示「已订阅」，列表可为空且有说明。
+- AC-10.2 选中 EventNotifier 含 SubscribeToEvents 的节点，Attributes「订阅事件」
+  可用；取消订阅后 chip 消失。
+- AC-10.3 收到事件通知时表格追加一行（Time/Message 等）；清空列表不影响订阅。
+- AC-10.4 `npm run test` 含 event-parse 单元测试；e2e 事件 MonitoredItem 步骤
+  CreateMonitoredItem 成功或 SKIP。
+
+---
+
 ## 交付与验收口径
 
 - 每阶段以其 AC 全绿为“完成”；阶段可独立提交。
-- 首版整体验收 = 阶段 0–9 的 AC 全部通过 + `01-requirements.md` §2 的 FR-1~FR-9 覆盖。
-- 非目标（§4，不含已落地的 HistoryRead raw）不在验收范围，作为后续阶段待办池。
+- 首版整体验收 = 阶段 0–10 的 AC 全部通过 + `01-requirements.md` §2 的
+  FR-1~FR-10 覆盖。
+- 非目标（§4，不含已落地的 HistoryRead raw / 基础 Event View）不在验收范围，
+  作为后续阶段待办池。

@@ -96,6 +96,8 @@ export const useNodeDetailStore = defineStore('nodeDetail', () => {
     return row?.displayValue
   }
 
+  const eventNotifierText = computed(() => attributeDisplay('EventNotifier'))
+
   function parseValueRank(text: string | undefined): number | undefined {
     if (text == null || text === '—' || text === '<null>') {
       return undefined
@@ -231,6 +233,7 @@ export const useNodeDetailStore = defineStore('nodeDetail', () => {
     currentValueText,
     dataTypeHint,
     valueRankHint,
+    eventNotifierText,
     canReadWriteValue,
     clear,
     loadForNode,

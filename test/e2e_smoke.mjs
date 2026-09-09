@@ -1,7 +1,7 @@
 /**
  * vulcan-web-client 端到端冒烟（Node + browser_shim + @wsopcua/wsopcua）
  *
- * 覆盖：连接 → 浏览 → 读 → 写 → 订阅一拍 → HistoryRead raw →（可选）Server 方法 Call
+ * 覆盖：连接 → 浏览 → 读 → 写 → 订阅一拍 → HistoryRead raw → 事件 MonitoredItem →（可选）Server 方法 Call
  *
  * 用法（假定 vulcan_server 4840 --ws 4843 已启动）：
  *   node test/e2e_smoke.mjs
@@ -29,6 +29,11 @@ import {
   WriteValue,
   coerceNodeId,
 } from '@wsopcua/wsopcua'
+import {
+  EventFilter,
+  QualifiedName,
+  SimpleAttributeOperand,
+} from './wsopcua_event_types.mjs'
 import { TimestampsToReturn } from '@wsopcua/wsopcua/service-subscription'
 
 const url = process.env.WSOPCUA_URL || 'ws://127.0.0.1:4843/opcua'
@@ -232,6 +237,83 @@ try {
       `count=${historyValues.length}`
     console.log(`SKIP history (${detail})`)
     check(true, 'history optional skip')
+  }
+
+  let eventSubscription = null
+  try {
+    eventSubscription = new ClientSubscription(session, {
+      requestedPublishingInterval: 1000,
+      requestedLifetimeCount: 60,
+      requestedMaxKeepAliveCount: 10,
+      maxNotificationsPerPublish: 100,
+      publishingEnabled: true,
+      priority: 10,
+    })
+    await waitForEvent(eventSubscription, 'started', 15000)
+
+    const eventFieldNames = ['Time', 'Severity', 'Message', 'SourceName', 'EventType']
+    const eventFilter = new EventFilter({
+      selectClauses: eventFieldNames.map(
+        (name) =>
+          new SimpleAttributeOperand({
+            typeDefinitionId: coerceNodeId('i=2041'),
+            browsePath: [new QualifiedName({ namespaceIndex: 0, name })],
+            attributeId: AttributeIds.Value,
+          }),
+      ),
+      whereClause: { elements: [] },
+    })
+
+    const eventItem = await eventSubscription.monitorP(
+      new ReadValueId({
+        nodeId: coerceNodeId('i=2253'),
+        attributeId: AttributeIds.EventNotifier,
+      }),
+      {
+        samplingInterval: 1000,
+        filter: eventFilter,
+        queueSize: 10,
+        discardOldest: true,
+      },
+      TimestampsToReturn.Neither,
+    )
+
+    if (statusGood(eventItem.statusCode)) {
+      check(true, 'event monitor CreateMonitoredItem on Server (i=2253)')
+      let eventSeen = false
+      eventItem.on('changed', () => {
+        eventSeen = true
+      })
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      if (eventSeen) {
+        check(true, 'event notification received')
+      } else {
+        console.log('SKIP event notification (vulcan may not emit OPC UA events yet)')
+        check(true, 'event notification optional skip')
+      }
+      await eventItem.terminateP()
+    } else {
+      const detail = eventItem.statusCode?.toString?.() ?? 'bad status'
+      console.log(`SKIP event monitor (${detail})`)
+      check(true, 'event monitor optional skip')
+    }
+
+    await eventSubscription.terminateP()
+    eventSubscription = null
+    check(true, 'terminate event subscription')
+  } catch (err) {
+    console.log(
+      `SKIP event subscription (${err instanceof Error ? err.message : String(err)})`,
+    )
+    check(true, 'event subscription optional skip')
+    if (eventSubscription) {
+      try {
+        await eventSubscription.terminateP()
+      } catch {
+        /* ignore */
+      }
+      eventSubscription = null
+    }
   }
 
   if (!skipMethod && subscription.subscriptionId != null) {

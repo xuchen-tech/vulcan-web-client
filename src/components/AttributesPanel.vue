@@ -6,6 +6,7 @@ import MethodCallDialog from '@/components/MethodCallDialog.vue'
 import WriteValueDialog from '@/components/WriteValueDialog.vue'
 import { useAddressSpaceStore } from '@/stores/address-space'
 import { useConnectionStore } from '@/stores/connection'
+import { useEventsStore } from '@/stores/events'
 import { useMonitorStore } from '@/stores/monitor'
 import { useNodeDetailStore } from '@/stores/node-detail'
 
@@ -13,6 +14,7 @@ const connection = useConnectionStore()
 const addressSpace = useAddressSpaceStore()
 const nodeDetail = useNodeDetailStore()
 const monitor = useMonitorStore()
+const events = useEventsStore()
 
 const writeDialogOpen = ref(false)
 const methodDialogOpen = ref(false)
@@ -21,6 +23,11 @@ const historyDialogOpen = ref(false)
 const selectedNodeLabel = computed(
   () => addressSpace.getSelectedNode()?.displayName ?? '',
 )
+
+const selectedNodeSubscribed = computed(() => {
+  const nodeId = addressSpace.selectedNodeId
+  return nodeId != null && events.subscribedNodeIds.includes(nodeId)
+})
 
 function onReadValue(): void {
   void nodeDetail.readSelectedValue()
@@ -59,6 +66,21 @@ function openHistoryDialog(): void {
 
 function closeHistoryDialog(): void {
   historyDialogOpen.value = false
+}
+
+function onSubscribeEvents(): void {
+  void events.subscribeSelectedNode()
+}
+
+function onUnsubscribeEvents(): void {
+  const nodeId = addressSpace.selectedNodeId
+  if (nodeId) {
+    void events.unsubscribeNode(nodeId)
+  }
+}
+
+function onOpenEventView(): void {
+  events.openEventView()
 }
 </script>
 
@@ -111,6 +133,39 @@ function closeHistoryDialog(): void {
 
       <div v-else-if="!nodeDetail.attrsLoading && !nodeDetail.attrsError" class="panel-hint compact">
         当前节点非 Variable / Method，Value 读/写不可用
+      </div>
+
+      <div
+        v-if="!nodeDetail.attrsLoading && !nodeDetail.attrsError && events.canSubscribeSelectedEvents"
+        class="value-actions event-actions"
+      >
+        <button
+          v-if="!selectedNodeSubscribed"
+          type="button"
+          class="btn btn-event"
+          :disabled="events.busy"
+          @click="onSubscribeEvents"
+        >
+          订阅事件
+        </button>
+        <template v-else>
+          <button
+            type="button"
+            class="btn btn-event"
+            :disabled="events.busy"
+            @click="onOpenEventView"
+          >
+            查看事件
+          </button>
+          <button
+            type="button"
+            class="btn btn-event-unsub"
+            :disabled="events.busy"
+            @click="onUnsubscribeEvents"
+          >
+            取消事件订阅
+          </button>
+        </template>
       </div>
 
       <div v-if="nodeDetail.attrsLoading" class="panel-hint">
@@ -241,6 +296,26 @@ function closeHistoryDialog(): void {
 
 .btn-history:hover:not(:disabled) {
   filter: brightness(1.08);
+}
+
+.btn-event {
+  background: #2a2448;
+  color: #e8dcff;
+  border-color: #6b52a8;
+}
+
+.btn-event:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.btn-event-unsub {
+  background: var(--bg-inset);
+  border-color: var(--border-strong);
+  color: var(--text-dim);
+}
+
+.event-actions {
+  margin-top: -0.15rem;
 }
 
 .panel-hint {

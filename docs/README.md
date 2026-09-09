@@ -8,7 +8,7 @@
 | --- | --- |
 | [01-requirements.md](01-requirements.md) | UaExpert 功能盘点 + 首版（核心对齐）需求 FR/NFR + 非目标 |
 | [02-design.md](02-design.md) | 架构分层、目录结构、OPC UA service 层、UI 布局、测试策略、风险 |
-| [03-implementation.md](03-implementation.md) | 阶段 0–9 实施步骤，每步产出、做法要点与验收标准（AC） |
+| [03-implementation.md](03-implementation.md) | 阶段 0–10 实施步骤，每步产出、做法要点与验收标准（AC） |
 
 联调依赖：../../docs/08-websocket-transport.md（WebSocket 传输选型）、
 ../vulcan/README.md（vulcan_server 的 wss 端点启动与冒烟）。

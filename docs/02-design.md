@@ -44,19 +44,24 @@ vulcan-web-client/
 │   │   ├── method.ts           # 方法调用
 │   │   ├── history.ts          # HistoryRead raw
 │   │   ├── history-parse.ts    # 时间范围/分页/曲线点纯函数
+│   │   ├── events.ts           # EventNotifier + EventFilter 订阅
+│   │   ├── event-parse.ts      # EventNotifier/事件字段纯函数
 │   │   ├── types.ts            # 领域类型（NodeInfo/AttrRow/RefRow/MonitorRow…）
 │   │   └── format.ts           # Variant/StatusCode/时间戳的展示格式化
 │   ├── stores/
 │   │   ├── connection.ts       # Pinia：连接状态、当前会话句柄引用
 │   │   ├── address-space.ts    # Pinia：树节点缓存、选中节点
 │   │   ├── monitor.ts          # Pinia：监视表行、订阅句柄
+│   │   ├── events.ts           # Pinia：事件列表、事件订阅
 │   │   └── log.ts              # Pinia：全局日志
 │   ├── components/
 │   │   ├── ConnectionBar.vue   # 连接栏（URL/安全/身份/连接按钮/状态）
 │   │   ├── AddressSpaceTree.vue# 左栏：地址空间树（懒加载）
 │   │   ├── AttributesPanel.vue # 右上：属性表
 │   │   ├── ReferencesPanel.vue # 右中：引用表
-│   │   ├── DataAccessView.vue  # 中栏底部：监视表（读写就地）
+│   │   ├── MiddleWorkspace.vue # 中栏：Data Access / Events 标签
+│   │   ├── DataAccessView.vue  # 监视表（读写就地）
+│   │   ├── EventView.vue       # 事件列表
 │   │   ├── MethodCallDialog.vue# 方法调用对话框
 │   │   ├── HistoryTrendDialog.vue # HistoryRead 表格 + 曲线
 │   │   ├── WriteValueDialog.vue# 写值对话框
@@ -135,7 +140,14 @@ Variant/DataType（格式化统一走 `opcua/format.ts`）。
 - 输出 `HistoryReadOutcome`：`{ samples, statusCode, truncated }`，样本含展示值与
   可选数值（供曲线）。时间范围/条数解析见 `history-parse.ts`。
 
-### 4.9 格式化（format.ts）
+### 4.9 事件（events.ts）
+- `EventSubscriptionManager`：对节点 `AttributeIds.EventNotifier` 创建 MonitoredItem，
+  `filter` 为 `EventFilter`（BaseEventType `i=2041`，选择 Time/Severity/Message 等）。
+- `'changed'` 回调收到 `Variant[]` 事件字段 → `event-parse.parseEventFieldMap` →
+  `ParsedOpcUaEvent` 交给 store 展示。
+- 默认事件源：`i=2253`（Server 对象）。
+
+### 4.10 格式化（format.ts）
 - `variantToDisplay(variant)`、`statusCodeToText(sc)`、`nodeClassName(n)`、
   `dateTimeToLocal(ts)`。集中处理数组、结构体（尽力展示）、null。
 

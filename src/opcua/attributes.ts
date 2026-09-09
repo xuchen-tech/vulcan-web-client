@@ -6,6 +6,7 @@ import {
 } from '@wsopcua/wsopcua'
 
 import { opcuaClientService } from './client'
+import { eventNotifierToText } from './event-parse'
 import {
   accessLevelToText,
   formatDataValue,
@@ -110,6 +111,8 @@ function formatAttributeValue(
     case AttributeIds.AccessLevel:
     case AttributeIds.UserAccessLevel:
       return accessLevelToText(Number(variant.value))
+    case AttributeIds.EventNotifier:
+      return eventNotifierToText(Number(variant.value))
     default:
       return variantToDisplay(variant)
   }

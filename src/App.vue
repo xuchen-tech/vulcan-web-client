@@ -5,16 +5,18 @@ import ConnectionBar from '@/components/ConnectionBar.vue'
 import AddressSpaceTree from '@/components/AddressSpaceTree.vue'
 import AttributesPanel from '@/components/AttributesPanel.vue'
 import ReferencesPanel from '@/components/ReferencesPanel.vue'
-import DataAccessView from '@/components/DataAccessView.vue'
 import LogPanel from '@/components/LogPanel.vue'
+import MiddleWorkspace from '@/components/MiddleWorkspace.vue'
 import { usePanelLayout } from '@/shared/column-layout'
 import { useConnectionStore } from '@/stores/connection'
+import { useEventsStore } from '@/stores/events'
 import { useMonitorStore } from '@/stores/monitor'
 import { useNodeDetailStore } from '@/stores/node-detail'
 
 const connectionStore = useConnectionStore()
 const nodeDetailStore = useNodeDetailStore()
 const monitorStore = useMonitorStore()
+const eventsStore = useEventsStore()
 const shellEl = ref<HTMLElement | null>(null)
 const mainEl = ref<HTMLElement | null>(null)
 const rightEl = ref<HTMLElement | null>(null)
@@ -25,12 +27,14 @@ onMounted(() => {
   connectionStore.init()
   nodeDetailStore.init()
   monitorStore.init()
+  eventsStore.init()
 })
 
 onUnmounted(() => {
   connectionStore.dispose()
   nodeDetailStore.dispose()
   void monitorStore.dispose()
+  void eventsStore.dispose()
 })
 </script>
 
@@ -72,10 +76,10 @@ onUnmounted(() => {
       <section class="panel data-access">
         <header class="panel-head">
           <span class="panel-mark" />
-          <h2>Data Access</h2>
-          <span class="panel-tag">Monitor</span>
+          <h2>Monitor</h2>
+          <span class="panel-tag">Data / Events</span>
         </header>
-        <DataAccessView />
+        <MiddleWorkspace />
       </section>
 
       <div
@@ -165,7 +169,7 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.panel :deep(.data-access-view) {
+.panel :deep(.middle-workspace) {
   flex: 1;
   min-height: 0;
 }

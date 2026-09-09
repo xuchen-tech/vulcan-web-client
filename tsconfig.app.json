@@ -6,7 +6,10 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@wsopcua/wsopcua/generated/*": [
+        "./node_modules/@wsopcua/wsopcua/generated/*"
+      ]
     },
     "noUnusedLocals": true,
     "noUnusedParameters": true,

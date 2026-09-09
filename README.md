@@ -122,7 +122,8 @@ bash test/run_smoke.sh
 3. 读/写/读回 `ns=3;s=CONFIG.RESOURCE1.Task1.Drive.Speed`  
 4. 对 `Counter` 创建 Subscription + MonitoredItem（等待通知或读回退）  
 5. HistoryRead raw（`Speed`，无数据则 SKIP）  
-6. 调用标准方法 `Server.GetMonitoredItems`（可选，`WSOPCUA_SKIP_METHOD=1` 跳过）  
+6. 对 Server（`i=2253`）创建事件 MonitoredItem（无通知则 SKIP）  
+7. 调用标准方法 `Server.GetMonitoredItems`（可选，`WSOPCUA_SKIP_METHOD=1` 跳过）  
 
 环境变量：
 
@@ -176,6 +177,13 @@ wss + 证书自动化可参考 `vulcan/web/test/run_ws_web_client_test.sh`（Sig
 3. 表格列出 SourceTimestamp / Value / Status；标量显示曲线。  
 4. 可改起止时间、条数，或点 **5 分钟 / 15 分钟 / 1 小时 / 全部** 再读。
 
+### 事件视图（Event View）
+
+1. 中间栏 **Monitor** 切换到 **Events** 标签。  
+2. 点击 **订阅 Server 事件源**，或选中 EventNotifier 含 SubscribeToEvents 的节点 → Attributes **订阅事件**。  
+3. 收到 OPC UA 事件后表格显示 Time / Severity / Message 等（当前 vulcan_server 可能尚无业务事件，订阅成功但列表为空属正常）。  
+4. 已订阅节点可在 Events 工具栏 chip 上取消订阅。
+
 ### 日志
 
 - 底部 Log 支持级别筛选、自动滚动、毫秒时间戳。  
@@ -206,7 +214,7 @@ vulcan-web-client/
 
 ## 相关文档
 
-- [docs/README.md](docs/README.md) — 需求、设计、分阶段验收（阶段 0–9）  
+- [docs/README.md](docs/README.md) — 需求、设计、分阶段验收（阶段 0–10）  
 - [docs/03-implementation.md](docs/03-implementation.md) — 各阶段 AC 清单  
 - [../vulcan/README.md](../vulcan/README.md) — 构建与启动 `vulcan_server`  
 - [../docs/08-websocket-transport.md](../docs/08-websocket-transport.md) — WebSocket 传输说明  

@@ -34,8 +34,9 @@ UaExpert 是桌面 OPC UA 通用客户端，核心能力如下（作为需求来
 ## 2. 首版范围（核心对齐）
 
 首版目标：在浏览器内复刻 UaExpert 最常用的“连接 → 浏览 → 看属性/引用 → 监视 →
-读写 → 调方法 → 订阅 → 历史原始值”闭环。A&C 事件、服务器诊断详表、工程持久化、
-可停靠布局、处理/事件历史 列为后续阶段（见 §4 非目标）。
+读写 → 调方法 → 订阅 → 历史原始值 → 事件订阅（Event View 基础）”闭环。完整 A&C
+告警确认、服务器诊断详表、工程持久化、可停靠布局、处理/事件历史 列为后续阶段
+（见 §4 非目标）。
 
 ### FR-1 连接与会话管理
 - FR-1.1 支持输入端点 URL（`wss://` / `ws://`），校验协议前缀。
@@ -90,6 +91,17 @@ UaExpert 是桌面 OPC UA 通用客户端，核心能力如下（作为需求来
 - FR-8.1 全局操作日志面板（时间戳 + 级别 + 消息），沿用现有 vulcan/web 的日志体验。
 - FR-8.2 关键错误（连接失败、读写失败、订阅失败）落到日志并在 UI 提示。
 
+### FR-10 事件视图（Event View，基础）
+- FR-10.1 对 EventNotifier 启用 SubscribeToEvents 的节点创建事件 MonitoredItem
+  （AttributeId=EventNotifier + EventFilter，BaseEventType 常用字段）。
+- FR-10.2 中间栏 Events 标签页以表格展示收到的事件（Time、Severity、Message、
+  SourceName、EventType 等）。
+- FR-10.3 Attributes 面板提供「订阅事件」入口；可订阅标准 Server 对象（`i=2253`）
+  作为默认事件源。
+- FR-10.4 服务端未发出事件时 UI 明确提示（订阅成功但列表为空）；订阅/取消失败
+  展示 StatusCode，不崩溃。
+- FR-10.5 条件确认、Acknowledge、Refresh 等 A&C 高级能力列为后续。
+
 ### FR-9 历史数据（History Trend / HistoryRead raw）
 - FR-9.1 对 Variable 节点发起 HistoryRead Raw（`ReadRawModifiedDetails`），
   可选起止时间、条数上限，处理 continuation point 分页。
@@ -112,7 +124,7 @@ UaExpert 是桌面 OPC UA 通用客户端，核心能力如下（作为需求来
 ## 4. 非目标 / 后续阶段（首版不做）
 
 - 历史处理值 / 修改记录 / 事件历史（Processed / Modified / Event HistoryRead）。
-- 事件/告警 A&C（Event View、条件确认）。
+- 告警 A&C 高级能力（条件确认、Acknowledge、Refresh 等；基础 Event View 见 FR-10）。
 - 服务器诊断详表（会话/订阅诊断计数器）。
 - 工程持久化（服务器列表、监视表、布局保存/加载）与可停靠布局。
 - 多服务器/多会话并存管理器。
