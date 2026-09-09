@@ -63,4 +63,12 @@ describe('readwrite-parse', () => {
   it('rejects empty input', () => {
     expect(() => parseWriteInput('   ')).toThrow(/不能为空/)
   })
+
+  it('parses DateTime from an ISO string when hinted', () => {
+    const parsed = parseWriteInput('2026-09-09T12:00:00', {
+      dataTypeNodeId: 'i=13',
+    })
+    expect(parsed.dataType).toBe(13)
+    expect(parsed.value).toBeInstanceOf(Date)
+  })
 })

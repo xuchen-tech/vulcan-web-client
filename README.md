@@ -122,8 +122,9 @@ bash test/run_smoke.sh
 3. 读/写/读回 `ns=3;s=CONFIG.RESOURCE1.Task1.Drive.Speed`  
 4. 对 `Counter` 创建 Subscription + MonitoredItem（等待通知或读回退）  
 5. HistoryRead raw（`Speed`，无数据则 SKIP）  
-6. 对 Server（`i=2253`）创建事件 MonitoredItem（无通知则 SKIP）  
-7. 调用标准方法 `Server.GetMonitoredItems`（可选，`WSOPCUA_SKIP_METHOD=1` 跳过）  
+6. 对 Server（`i=2253`）创建事件 MonitoredItem（`ContentFilter` whereClause；无通知则 SKIP）  
+7. 用 `admin`/`admin123` 再开会话验证写回与方法 Call（`WSOPCUA_SKIP_WRITE_AUTH=1` 跳过）  
+8. 调用标准方法 `Server.GetMonitoredItems`（可选，`WSOPCUA_SKIP_METHOD=1` 跳过）  
 
 环境变量：
 
@@ -132,7 +133,9 @@ bash test/run_smoke.sh
 | `WSOPCUA_URL` | `ws://127.0.0.1:4843/opcua` | WebSocket 端点 |
 | `WSOPCUA_SPEED_NODE` | `ns=3;s=CONFIG.RESOURCE1.Task1.Drive.Speed` | 读写变量 |
 | `WSOPCUA_COUNTER_NODE` | `ns=3;s=CONFIG.RESOURCE1.Task1.PLC.Counter` | 订阅/写入变量 |
-| `WSOPCUA_USER` / `WSOPCUA_PASSWORD` | — | 可选；明文 `opc.ws://` 端点通常仅 Anonymous，写值会 SKIP |
+| `WSOPCUA_USER` / `WSOPCUA_PASSWORD` | — | 主会话可选用户名身份 |
+| `WSOPCUA_WRITE_USER` / `WSOPCUA_WRITE_PASSWORD` | `admin` / `admin123` | 有写权限会话，用于写回与方法 Call |
+| `WSOPCUA_SKIP_WRITE_AUTH` | — | 设为 `1` 跳过 admin 写权限会话 |
 | `WSOPCUA_SKIP_METHOD` | — | 设为 `1` 跳过方法 Call |
 
 wss + 证书自动化可参考 `vulcan/web/test/run_ws_web_client_test.sh`（SignAndEncrypt 场景）。
@@ -146,13 +149,15 @@ wss + 证书自动化可参考 `vulcan/web/test/run_ws_web_client_test.sh`（Sig
 1. 打开 `http://localhost:5173`，确认三栏布局 + 底部 Log 面板。  
 2. Connect → 状态绿点「已连接」。  
 3. Disconnect → 「未连接」。  
-4. 停止 server 后 Connect → 「失败」+ **Reconnect**，页面不崩溃。
+4. 停止 server 后状态先进入「重连中…」并自动重试；放弃后为「失败」+ **Reconnect**，页面不崩溃。
+5. 重连过程中点 **Disconnect** 可取消自动重试。
 
 ### 地址空间 / 属性 / 引用
 
 1. 连接后左侧展开 **Root → Objects → PlcType → …**  
-2. 选中 Variable（如 **Counter**），右侧 Attributes 显示 NodeClass、DataType、Value 等。  
-3. References 面板列出正/反向引用。
+2. 树工具栏可切换 **层级引用 / 全部引用**（全部引用会显示 HasTypeDefinition 等）。  
+3. 选中 Variable（如 **Counter**），右侧 Attributes 显示 NodeClass、DataType、Value 等。  
+4. References 面板列出正/反向引用；**双击**目标行可在树中定位并展开。
 
 ### 读 / 写 Value
 

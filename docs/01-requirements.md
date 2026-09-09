@@ -52,6 +52,7 @@ UaExpert 是桌面 OPC UA 通用客户端，核心能力如下（作为需求来
 - FR-2.2 每个节点显示 BrowseName/DisplayName，按 NodeClass 区分图标
   （Object/Variable/Method/ObjectType/…）。
 - FR-2.3 支持从任意节点继续浏览其正向引用（HierarchicalReferences 优先，可切换全部引用）。
+  树工具栏提供「层级引用 / 全部引用」切换；全部引用使用 `References` 正向浏览。
 - FR-2.4 选中节点驱动右侧 Attributes / References 面板刷新。
 
 ### FR-3 属性面板（Attributes）
@@ -65,6 +66,7 @@ UaExpert 是桌面 OPC UA 通用客户端，核心能力如下（作为需求来
 - FR-4.1 展示所选节点的引用：引用类型、方向（正/反）、目标 NodeId、BrowseName、
   TypeDefinition（若有）。
 - FR-4.2 双击目标可在地址空间树中定位/展开该节点（尽力而为）。
+  沿反向 HierarchicalReferences 走到 Root，逐级展开后选中；若当前树模式不含该节点则仍选中并提示切换「全部引用」。
 
 ### FR-5 Data Access 监视表
 - FR-5.1 把地址空间中的 Variable 节点加入监视表（按钮或拖拽）。
@@ -84,7 +86,8 @@ UaExpert 是桌面 OPC UA 通用客户端，核心能力如下（作为需求来
 
 ### FR-7 方法调用（Call）
 - FR-7.1 选中 Method 节点，读取其 InputArguments / OutputArguments 定义。
-- FR-7.2 编辑输入参数（按参数 DataType 提供输入），执行 Call。
+- FR-7.2 编辑输入参数（按参数 DataType 提供输入控件：Boolean 下拉、数值 number、
+  DateTime 日期时间、其余/数组仍为文本），执行 Call。
 - FR-7.3 展示 OutputArguments 与调用 StatusCode。
 
 ### FR-8 日志/状态

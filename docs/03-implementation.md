@@ -90,6 +90,8 @@
 - AC-2.3 不同 NodeClass 显示不同图标（Object/Variable/Method 可区分）。
 - AC-2.4 点击节点后，store `selectedNodeId` 更新（可由后续面板验证）。
 - AC-2.5 大量子节点时懒加载不卡死（展开逐层触发，不一次性全量遍历）。
+- AC-2.6 树工具栏可在「层级引用 / 全部引用」间切换；全部引用下能看到
+  HasTypeDefinition 等非层级正向引用（G-W-01）。
 
 ---
 
@@ -113,6 +115,8 @@
   其余属性正常显示，面板不报错。
 - AC-3.3 引用面板列出选中节点的正/反向引用，含引用类型名与目标信息。
 - AC-3.4 属性/引用读取失败仅影响本面板（局部错误态 + 日志），不影响树与连接。
+- AC-3.5 双击引用目标后，树沿层级父链展开并选中该节点；若当前浏览模式不含
+  该节点，仍选中并在日志提示（G-W-02）。
 
 ---
 
@@ -173,7 +177,8 @@
 
 **做法要点**：
 - 读 Method 的 InputArguments/OutputArguments（Argument 结构体数组）。
-- 按参数 DataType 生成输入控件，组装 `CallMethodRequest` → 调用。
+- 按参数 DataType 生成输入控件（Boolean / 数值 / DateTime / 文本），
+  组装 `CallMethodRequest` → 调用。
 - 展示 outputArguments 与 StatusCode。
 
 **验收标准**：
@@ -199,7 +204,8 @@
 
 **验收标准**：
 - AC-7.1 任一面板请求失败时，日志出现对应错误项，其他面板与连接不受影响。
-- AC-7.2 断线后 UI 状态明确为“未连接/失败”，提供手动重连且重连后功能恢复。
+- AC-7.2 意外断线后 UI 进入“重连中…”并有限次自动重试；失败后状态为“失败”，
+  提供手动重连且重连后功能恢复。用户 Disconnect 取消自动重试。
 - AC-7.3 日志级别、时间戳正确，长日志可滚动查看。
 
 ---
@@ -273,8 +279,8 @@ Attributes「订阅事件」入口。
 - AC-10.2 选中 EventNotifier 含 SubscribeToEvents 的节点，Attributes「订阅事件」
   可用；取消订阅后 chip 消失。
 - AC-10.3 收到事件通知时表格追加一行（Time/Message 等）；清空列表不影响订阅。
-- AC-10.4 `npm run test` 含 event-parse 单元测试；e2e 事件 MonitoredItem 步骤
-  CreateMonitoredItem 成功或 SKIP。
+- AC-10.4 `npm run test` 含 event-parse 单元测试；e2e 事件 MonitoredItem 使用
+  `new ContentFilter()` 构造 whereClause，CreateMonitoredItem 成功或 SKIP。
 
 ---
 

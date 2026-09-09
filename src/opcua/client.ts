@@ -24,6 +24,9 @@ export type ConnectionStateListener = (
 
 type DetachHandler = () => void
 
+export const RECONNECT_DELAYS_MS = [800, 2000, 4000]
+export const MAX_RECONNECT_ATTEMPTS = RECONNECT_DELAYS_MS.length
+
 export class OpcuaClientService {
   private client: OPCUAClient | null = null
   private session: ClientSession | null = null
@@ -31,6 +34,11 @@ export class OpcuaClientService {
   private detachHandlers: DetachHandler[] = []
   private status: ConnectionStatus = 'disconnected'
   private lastError?: string
+  private lastOptions: ConnectOptions | null = null
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  private reconnectGeneration = 0
+  private reconnectAttempt = 0
+  private userDisconnect = false
 
   onStateChange(listener: ConnectionStateListener): () => void {
     this.listeners.add(listener)
@@ -59,9 +67,26 @@ export class OpcuaClientService {
 
   async connect(options: ConnectOptions): Promise<void> {
     validateEndpointUrl(options.url)
+    this.userDisconnect = false
+    this.cancelReconnect()
+    this.lastOptions = options
     await this.cleanup()
     this.emitState('connecting')
+    await this.openSession(options, { emitFailure: true })
+  }
 
+  async disconnect(): Promise<void> {
+    this.userDisconnect = true
+    this.cancelReconnect()
+    this.lastOptions = null
+    await this.cleanup()
+    this.emitState('disconnected')
+  }
+
+  private async openSession(
+    options: ConnectOptions,
+    flags: { emitFailure: boolean },
+  ): Promise<void> {
     try {
       const clientOptions = buildClientOptions(options)
       this.client = new OPCUAClient(clientOptions)
@@ -71,18 +96,16 @@ export class OpcuaClientService {
       const sessionOptions = buildSessionOptions(options)
       this.session = await this.client.createSessionP(sessionOptions)
       this.attachRuntimeHandlers(this.client, this.session)
+      this.reconnectAttempt = 0
       this.emitState('connected')
     } catch (err) {
       await this.cleanup()
       const message = err instanceof Error ? err.message : String(err)
-      this.emitState('failed', message)
+      if (flags.emitFailure) {
+        this.emitState('failed', message)
+      }
       throw err
     }
-  }
-
-  async disconnect(): Promise<void> {
-    await this.cleanup()
-    this.emitState('disconnected')
   }
 
   private attachRuntimeHandlers(
@@ -107,12 +130,83 @@ export class OpcuaClientService {
   }
 
   private async handleRemoteDisconnect(reason: string): Promise<void> {
+    if (this.userDisconnect) {
+      return
+    }
+    if (this.status === 'reconnecting' && !this.session && !this.client) {
+      return
+    }
     if (!this.session && !this.client) {
       return
     }
 
+    const options = this.lastOptions
     await this.cleanup()
-    this.emitState('failed', reason)
+
+    if (!options) {
+      this.emitState('failed', reason)
+      return
+    }
+
+    this.reconnectAttempt = 0
+    this.emitState('reconnecting', reason)
+    this.scheduleReconnect(options, reason)
+  }
+
+  private scheduleReconnect(options: ConnectOptions, reason: string): void {
+    this.cancelReconnectTimerOnly()
+    const generation = this.reconnectGeneration
+    const delay =
+      RECONNECT_DELAYS_MS[
+        Math.min(this.reconnectAttempt, RECONNECT_DELAYS_MS.length - 1)
+      ]
+
+    this.reconnectTimer = setTimeout(() => {
+      void this.runReconnect(options, reason, generation)
+    }, delay)
+  }
+
+  private async runReconnect(
+    options: ConnectOptions,
+    reason: string,
+    generation: number,
+  ): Promise<void> {
+    if (generation !== this.reconnectGeneration || this.userDisconnect) {
+      return
+    }
+
+    this.reconnectAttempt += 1
+    this.emitState(
+      'reconnecting',
+      `${reason}（第 ${this.reconnectAttempt}/${MAX_RECONNECT_ATTEMPTS} 次重试）`,
+    )
+
+    try {
+      await this.openSession(options, { emitFailure: false })
+    } catch (err) {
+      if (generation !== this.reconnectGeneration || this.userDisconnect) {
+        return
+      }
+      if (this.reconnectAttempt >= MAX_RECONNECT_ATTEMPTS) {
+        const message = err instanceof Error ? err.message : String(err)
+        this.emitState('failed', `重连失败: ${message}`)
+        return
+      }
+      this.scheduleReconnect(options, reason)
+    }
+  }
+
+  private cancelReconnect(): void {
+    this.reconnectGeneration += 1
+    this.reconnectAttempt = 0
+    this.cancelReconnectTimerOnly()
+  }
+
+  private cancelReconnectTimerOnly(): void {
+    if (this.reconnectTimer != null) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
   }
 
   private async cleanup(): Promise<void> {

@@ -6,6 +6,10 @@ import { useNodeDetailStore } from '@/stores/node-detail'
 const connection = useConnectionStore()
 const addressSpace = useAddressSpaceStore()
 const nodeDetail = useNodeDetailStore()
+
+function onLocate(nodeId: string): void {
+  void addressSpace.locateNode(nodeId)
+}
 </script>
 
 <template>
@@ -43,7 +47,13 @@ const nodeDetail = useNodeDetailStore()
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, index) in nodeDetail.references" :key="`${row.referenceType}-${row.targetNodeId}-${index}`">
+          <tr
+            v-for="(row, index) in nodeDetail.references"
+            :key="`${row.referenceType}-${row.targetNodeId}-${index}`"
+            class="ref-row"
+            :title="addressSpace.locating ? '正在定位…' : '双击在地址空间中定位'"
+            @dblclick="onLocate(row.targetNodeId)"
+          >
             <td>{{ row.referenceType }}</td>
             <td>{{ row.isForward ? 'Forward' : 'Inverse' }}</td>
             <td>{{ row.targetBrowseName }}</td>
@@ -102,6 +112,14 @@ const nodeDetail = useNodeDetailStore()
 
 .ref-table tbody tr:nth-child(even) {
   background: rgba(255, 255, 255, 0.015);
+}
+
+.ref-row {
+  cursor: pointer;
+}
+
+.ref-row:hover {
+  background: var(--bg-hover);
 }
 
 .ref-table th {

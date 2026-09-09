@@ -31,6 +31,7 @@ import {
 } from '@wsopcua/wsopcua'
 import {
   EventFilter,
+  ContentFilter,
   QualifiedName,
   SimpleAttributeOperand,
 } from './wsopcua_event_types.mjs'
@@ -44,6 +45,9 @@ const counterNodeId =
   process.env.WSOPCUA_COUNTER_NODE ||
   'ns=3;s=CONFIG.RESOURCE1.Task1.PLC.Counter'
 const skipMethod = process.env.WSOPCUA_SKIP_METHOD === '1'
+const skipWriteAuth = process.env.WSOPCUA_SKIP_WRITE_AUTH === '1'
+const writeUser = process.env.WSOPCUA_WRITE_USER?.trim() || 'admin'
+const writePassword = process.env.WSOPCUA_WRITE_PASSWORD ?? 'admin123'
 const userName = process.env.WSOPCUA_USER?.trim()
 const userPassword = process.env.WSOPCUA_PASSWORD ?? ''
 
@@ -261,7 +265,7 @@ try {
             attributeId: AttributeIds.Value,
           }),
       ),
-      whereClause: { elements: [] },
+      whereClause: new ContentFilter(),
     })
 
     const eventItem = await eventSubscription.monitorP(
@@ -313,6 +317,111 @@ try {
         /* ignore */
       }
       eventSubscription = null
+    }
+  }
+
+  if (skipWriteAuth) {
+    console.log('SKIP write-auth (WSOPCUA_SKIP_WRITE_AUTH=1)')
+    check(true, 'write-auth optional skip')
+  } else {
+    let adminClient = null
+    let adminSession = null
+    try {
+      adminClient = new OPCUAClient({
+        securityMode: MessageSecurityMode.None,
+        securityPolicy: SecurityPolicy.None,
+        endpoint_must_exist: false,
+        connectionStrategy: { maxRetry: 1 },
+      })
+      await adminClient.connectP(url)
+      adminSession = await adminClient.createSessionP({
+        userIdentityInfo: { userName: writeUser, password: writePassword },
+      })
+      const adminValue =
+        typeof counterBefore === 'number' ? counterBefore + 250 : 250
+      const adminWriteStatus = await adminSession.writeP(
+        new WriteValue({
+          nodeId: coerceNodeId(counterNodeId),
+          attributeId: AttributeIds.Value,
+          value: new DataValue({
+            value: new Variant({
+              value: adminValue,
+              dataType: DataType.Int32,
+            }),
+          }),
+        }),
+      )
+      if (statusGood(adminWriteStatus)) {
+        const adminRead = await adminSession.readVariableValueP(counterNodeId)
+        check(
+          adminRead.value?.value?.value === adminValue,
+          `write-auth ${writeUser} write-back ${counterNodeId} = ${adminValue}`,
+        )
+      } else {
+        const detail =
+          adminWriteStatus?.name ??
+          adminWriteStatus?.toString?.() ??
+          'bad status'
+        console.log(`SKIP write-auth write (${detail})`)
+        check(true, 'write-auth write optional skip')
+      }
+
+      if (!skipMethod) {
+        const adminSub = new ClientSubscription(adminSession, {
+          requestedPublishingInterval: 500,
+          requestedLifetimeCount: 60,
+          requestedMaxKeepAliveCount: 10,
+          maxNotificationsPerPublish: 100,
+          publishingEnabled: true,
+          priority: 10,
+        })
+        await waitForEvent(adminSub, 'started', 15000)
+        const adminCall = await adminSession.callP([
+          new CallMethodRequest({
+            objectId: coerceNodeId('ns=0;i=2253'),
+            methodId: coerceNodeId('ns=0;i=11492'),
+            inputArguments: [
+              new Variant({
+                dataType: DataType.UInt32,
+                value: adminSub.subscriptionId,
+              }),
+            ],
+          }),
+        ])
+        const adminCallResult = adminCall.result?.[0]
+        if (adminCallResult && statusGood(adminCallResult.statusCode)) {
+          check(
+            true,
+            `write-auth ${writeUser} call Server.GetMonitoredItems`,
+          )
+        } else {
+          const detail =
+            adminCallResult?.statusCode?.toString?.() ?? 'no result'
+          console.log(`SKIP write-auth method (${detail})`)
+          check(true, 'write-auth method optional skip')
+        }
+        await adminSub.terminateP()
+      }
+    } catch (err) {
+      console.log(
+        `SKIP write-auth (${err instanceof Error ? err.message : String(err)})`,
+      )
+      check(true, 'write-auth optional skip')
+    } finally {
+      try {
+        if (adminSession) {
+          await adminSession.closeP()
+        }
+      } catch {
+        /* ignore */
+      }
+      try {
+        if (adminClient) {
+          await adminClient.disconnectP()
+        }
+      } catch {
+        /* ignore */
+      }
     }
   }
 

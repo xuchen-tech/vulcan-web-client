@@ -142,6 +142,13 @@ function coerceScalar(
       return { dataType: 11, value: Number(text) }
     case 12:
       return { dataType: 12, value: text }
+    case 13: {
+      const date = new Date(text)
+      if (Number.isNaN(date.getTime())) {
+        throw new Error(`无法解析为 DateTime: ${text}`)
+      }
+      return { dataType: 13, value: date }
+    }
     default:
       return inferScalar(text)
   }

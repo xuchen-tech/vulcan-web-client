@@ -104,6 +104,9 @@ Variant/DataType（格式化统一走 `opcua/format.ts`）。
 ### 4.2 浏览（browse.ts）
 - `browse(nodeId, opts)`：调用会话 `browseP`，默认 `HierarchicalReferences`、
   `browseDirection=Forward`、`resultMask=all`；处理 `continuationPoint`（BrowseNext）。
+  树可切换为 `References`（全部正向引用，G-W-01）。
+- `browseHierarchicalPath(nodeId)`：反向 HierarchicalReferences 走到 Root，供
+  引用面板双击定位（G-W-02）。
 - 返回 `NodeInfo[]`：`{ nodeId, browseName, displayName, nodeClass, typeDefinition, hasChildren? }`。
 
 ### 4.3 属性（attributes.ts）
@@ -176,8 +179,9 @@ Variant/DataType（格式化统一走 `opcua/format.ts`）。
 
 - 所有 service 方法返回 Promise，store action 内 try/catch，失败写 `log` store 并置
   面板局部错误态（NFR-6）；不 throw 到组件渲染层。
-- 连接状态机：`disconnected → connecting → connected → (reconnecting) → disconnected/failed`。
-- 断线：`OPCUAClient` 的重连策略首版设为不自动重连或有限重试，UI 提供手动重连。
+- 连接状态机：`disconnected → connecting → connected → reconnecting → connected/failed`。
+  意外断线后有限次自动重试（`RECONNECT_DELAYS_MS`），UI 显示「重连中…」。
+- 用户 Disconnect 取消自动重试；失败后提供手动 Reconnect。
 
 ## 7. 测试策略
 
@@ -194,5 +198,6 @@ Variant/DataType（格式化统一走 `opcua/format.ts`）。
   （现有 vulcan/web 仅用到 连接/读/写/浏览）。若订阅 API 不完备，退化为轮询 read。
 - R-2 wss + 非 None 安全策略需服务端证书信任与浏览器 TLS 处理；首版联调以 None/None
   或浏览器已信任证书为主，安全策略打通列为集成阶段验证点。
-- R-3 结构体/自定义类型解码依赖服务端 DataTypeDefinition 与库能力，首版只读尽力展示。
-- R-4 大地址空间树的性能（懒加载 + 虚拟滚动），首版先懒加载，虚拟滚动按需引入。
+- R-3 结构体/自定义类型：`formatPlainObject` 按成员名浅层递归展示；写入仍拒绝。
+  按 DataTypeDefinition 对齐字段名/类型仍为后续增强（G-W-04 部分）。
+- R-4 大地址空间树的性能（懒加载 + 虚拟滚动），首版先懒加载，虚拟滚动按需引入（G-W-06）。

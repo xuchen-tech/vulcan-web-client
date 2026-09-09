@@ -3,6 +3,7 @@ import { NodeClass } from '@wsopcua/wsopcua/data-model'
 
 import type { OpcNodeClass } from '@/opcua/types'
 
+import { formatPlainObject } from './format-object'
 import { statusCodeToText } from './status'
 
 export function nodeClassName(nodeClass: OpcNodeClass | NodeClass): string {
@@ -114,8 +115,17 @@ function formatExtensionObject(value: unknown): string {
   if (typeof value !== 'object' || value === null) {
     return String(value)
   }
-  if ('body' in value) {
-    return `ExtensionObject(${variantToDisplay((value as { body?: Variant }).body as Variant)})`
+  if ('body' in value && (value as { body?: unknown }).body != null) {
+    const body = (value as { body?: unknown }).body
+    if (body && typeof body === 'object' && 'dataType' in body) {
+      return `ExtensionObject(${variantToDisplay(body as Variant)})`
+    }
+    const dumped = formatPlainObject(body)
+    return dumped ? `ExtensionObject(${dumped})` : 'ExtensionObject'
+  }
+  const dumped = formatPlainObject(value)
+  if (dumped) {
+    return dumped
   }
   return hasToString(value) ? value.toString() : '[ExtensionObject]'
 }

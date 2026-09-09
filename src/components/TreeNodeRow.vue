@@ -61,6 +61,7 @@ function onDragStart(event: DragEvent): void {
       class="tree-row"
       :class="{ selected: isSelected, draggable: isDraggable }"
       :style="{ paddingLeft: `${depth * 0.85 + 0.25}rem` }"
+      :data-node-id="node.nodeId"
       :draggable="isDraggable"
       @click="onRowClick"
       @dragstart="onDragStart"

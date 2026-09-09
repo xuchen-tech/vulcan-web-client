@@ -62,7 +62,20 @@ export const useConnectionStore = defineStore('connection', () => {
       error.value = nextError ?? null
 
       const log = useLogStore()
-      if (
+      if (nextStatus === 'reconnecting') {
+        log.warn(`连接中断，正在重连: ${nextError ?? ''}`)
+      } else if (
+        previous === 'reconnecting' &&
+        nextStatus === 'connected'
+      ) {
+        log.ok('重连成功')
+      } else if (
+        previous === 'reconnecting' &&
+        nextStatus === 'failed' &&
+        nextError
+      ) {
+        log.err(`重连失败: ${nextError}`)
+      } else if (
         previous === 'connected' &&
         nextStatus === 'failed' &&
         nextError

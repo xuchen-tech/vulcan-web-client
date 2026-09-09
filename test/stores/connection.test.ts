@@ -3,12 +3,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const connectMock = vi.fn()
 const disconnectMock = vi.fn()
+let stateListener:
+  | ((status: string, error?: string) => void)
+  | null = null
 
 vi.mock('@/opcua/client', () => ({
   opcuaClientService: {
     connect: (...args: unknown[]) => connectMock(...args),
     disconnect: (...args: unknown[]) => disconnectMock(...args),
-    onStateChange: vi.fn(() => () => {}),
+    onStateChange: vi.fn((listener: (status: string, error?: string) => void) => {
+      stateListener = listener
+      return () => {
+        stateListener = null
+      }
+    }),
   },
 }))
 
@@ -20,6 +28,7 @@ describe('useConnectionStore', () => {
     setActivePinia(createPinia())
     connectMock.mockReset()
     disconnectMock.mockReset()
+    stateListener = null
   })
 
   it('logs and rejects invalid URL without calling connect', async () => {
@@ -73,5 +82,30 @@ describe('useConnectionStore', () => {
 
     expect(connection.canConnect).toBe(true)
     expect(connection.connectButtonLabel).toBe('Reconnect')
+  })
+
+  it('surfaces reconnecting from the client service', () => {
+    vi.stubGlobal('window', {
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })
+
+    const connection = useConnectionStore()
+    const log = useLogStore()
+    connection.init()
+
+    stateListener?.('reconnecting', 'WebSocket 连接已丢失')
+
+    expect(connection.status).toBe('reconnecting')
+    expect(connection.isBusy).toBe(true)
+    expect(connection.canConnect).toBe(false)
+    expect(log.entries.some((e) => e.message.includes('正在重连'))).toBe(true)
+
+    stateListener?.('connected')
+    expect(connection.status).toBe('connected')
+    expect(log.entries.some((e) => e.message.includes('重连成功'))).toBe(true)
+
+    connection.dispose()
+    vi.unstubAllGlobals()
   })
 })

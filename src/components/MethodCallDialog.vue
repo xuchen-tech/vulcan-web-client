@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 
 import { callMethod, readMethodSignature } from '@/opcua/method'
+import { methodInputControl } from '@/opcua/method-input'
 import type { MethodCallResult, MethodSignature } from '@/opcua/types'
 import { useLogStore } from '@/stores/log'
 
@@ -181,11 +182,38 @@ async function onCall(): Promise<void> {
               {{ arg.name }}
               <span class="field-meta">{{ formatArgMeta(arg) }}</span>
             </label>
+            <select
+              v-if="methodInputControl(arg.dataTypeName, arg.valueRank) === 'boolean'"
+              v-model="inputTexts[index]"
+              class="field-input"
+              :disabled="busy"
+            >
+              <option value="">选择 true / false</option>
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
             <input
+              v-else-if="methodInputControl(arg.dataTypeName, arg.valueRank) === 'number'"
+              v-model="inputTexts[index]"
+              type="number"
+              class="field-input"
+              :placeholder="arg.dataTypeName"
+              :disabled="busy"
+            />
+            <input
+              v-else-if="methodInputControl(arg.dataTypeName, arg.valueRank) === 'datetime'"
+              v-model="inputTexts[index]"
+              type="datetime-local"
+              step="1"
+              class="field-input"
+              :disabled="busy"
+            />
+            <input
+              v-else
               v-model="inputTexts[index]"
               type="text"
               class="field-input"
-              :placeholder="arg.dataTypeName === 'Boolean' ? 'true / false' : arg.dataTypeName"
+              :placeholder="arg.dataTypeName"
               :disabled="busy"
             />
           </div>
