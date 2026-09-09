@@ -79,27 +79,32 @@ function onToggle(nodeId: string): void {
 
 .tree-hint {
   margin: 0;
-  color: #8c959f;
+  color: var(--text-dim);
   font-style: italic;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .tree-error {
   margin: 0;
-  color: #cf222e;
-  font-size: 0.85rem;
+  color: var(--bad);
+  font-size: 0.82rem;
 }
 
 .selection-bar {
   margin: 0.5rem 0 0;
-  padding-top: 0.35rem;
-  border-top: 1px solid #d0d7de;
-  font-size: 0.75rem;
-  color: #656d76;
+  padding: 0.35rem 0.4rem 0 0;
+  border-top: 1px solid var(--border);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .selection-bar code {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   word-break: break-all;
+  color: var(--cyan);
+  text-transform: none;
+  letter-spacing: 0;
 }
 </style>

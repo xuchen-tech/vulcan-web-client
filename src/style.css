@@ -1,3 +1,39 @@
+:root {
+  --bg-app: #0c1014;
+  --bg-panel: #141a21;
+  --bg-panel-alt: #1a222c;
+  --bg-inset: #0b0f13;
+  --bg-hover: #1e2833;
+  --bg-selected: #16303a;
+  --bg-header: #10161c;
+  --bg-table-head: #121920;
+
+  --border: #2a3542;
+  --border-strong: #3d4b5c;
+  --border-accent: #c48a2a;
+
+  --text: #d8dee8;
+  --text-muted: #8b96a5;
+  --text-dim: #667180;
+  --text-inverse: #0c1014;
+
+  --accent: #e8a317;
+  --accent-dim: #8a6414;
+  --cyan: #3ecfc0;
+  --cyan-dim: #1a6e66;
+  --good: #4ade80;
+  --warn: #e8a317;
+  --bad: #f07167;
+  --info: #7aa2c9;
+
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  --font-ui: 'Segoe UI', 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Cascadia Mono', 'SFMono-Regular', ui-monospace,
+    Menlo, Consolas, monospace;
+  --radius: 2px;
+}
+
 *,
 *::before,
 *::after {
@@ -11,24 +47,149 @@ body,
   margin: 0;
 }
 
+html {
+  color-scheme: dark;
+}
+
 body {
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
-  color: #1f2328;
-  background: #f6f8fa;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 500px at 12% -10%, rgba(232, 163, 23, 0.07), transparent 55%),
+    radial-gradient(900px 420px at 100% 0%, rgba(62, 207, 192, 0.05), transparent 50%),
+    linear-gradient(180deg, #10151b 0%, var(--bg-app) 28%);
+  letter-spacing: 0.01em;
 }
 
 h2 {
-  margin: 0 0 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 600;
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #656d76;
+  letter-spacing: 0.14em;
+  color: var(--accent);
 }
 
-.placeholder {
+code,
+.mono {
+  font-family: var(--font-mono);
+}
+
+.placeholder,
+.panel-hint {
   margin: 0;
-  color: #8c959f;
+  color: var(--text-dim);
   font-style: italic;
+  font-size: 0.82rem;
+}
+
+.panel-error {
+  margin: 0;
+  color: var(--bad);
+  font-size: 0.82rem;
+}
+
+/* 工业面板标题条 */
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  min-height: 1.7rem;
+  margin: 0 0 0.55rem;
+  padding: 0 0 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-head h2 {
+  flex: 1;
+}
+
+.panel-mark {
+  width: 0.28rem;
+  height: 0.85rem;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(232, 163, 23, 0.55);
+  flex-shrink: 0;
+}
+
+.panel-tag {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+/* 通用控件 */
+.field-input,
+.control-select,
+.num-input,
+.write-input {
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg-inset);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-inset);
+}
+
+.field-input:focus,
+.control-select:focus,
+.num-input:focus,
+.write-input:focus {
+  outline: 1px solid var(--accent);
+  border-color: var(--accent);
+}
+
+.field-input:disabled,
+.control-select:disabled,
+.num-input:disabled,
+.write-input:disabled {
+  opacity: 0.55;
+}
+
+.btn {
+  font-family: inherit;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-inset);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #314050;
+  border: 1px solid #1a232c;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3d5164;
+}
+
+body.is-col-resizing,
+body.is-col-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+body.is-row-resizing,
+body.is-row-resizing * {
+  cursor: row-resize !important;
+  user-select: none !important;
 }

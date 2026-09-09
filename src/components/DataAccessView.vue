@@ -208,22 +208,22 @@ function onDrop(event: DragEvent): void {
 }
 
 .data-access-view.drop-active {
-  outline: 2px dashed #0969da;
+  outline: 1px dashed var(--cyan);
   outline-offset: -2px;
-  background: #f6f8fa;
+  background: rgba(62, 207, 192, 0.06);
 }
 
 .status-hint {
   margin: 0;
-  font-size: 0.78rem;
-  color: #57606a;
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
 .toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.4rem;
   flex-shrink: 0;
 }
 
@@ -231,16 +231,17 @@ function onDrop(event: DragEvent): void {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.72rem;
-  color: #656d76;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .num-input {
   width: 4.5rem;
   padding: 0.2rem 0.35rem;
-  border: 1px solid #d0d7de;
-  border-radius: 4px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
 }
 
 .num-input.narrow {
@@ -249,117 +250,132 @@ function onDrop(event: DragEvent): void {
 
 .btn {
   padding: 0.25rem 0.55rem;
-  border-radius: 4px;
   border: 1px solid transparent;
-  font-size: 0.78rem;
-  cursor: pointer;
-}
-
-.btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+  font-size: 0.7rem;
 }
 
 .btn-add {
-  background: #0969da;
-  color: #fff;
+  background: var(--cyan-dim);
+  color: #d8fffb;
+  border-color: var(--cyan);
 }
 
 .btn-apply {
-  background: #f6f8fa;
-  border-color: #d0d7de;
+  background: var(--bg-inset);
+  border-color: var(--border-strong);
+  color: var(--text);
 }
 
 .btn-write {
-  background: #0969da;
-  color: #fff;
-  padding: 0.2rem 0.45rem;
+  background: var(--accent-dim);
+  color: #fff6e5;
+  border-color: var(--accent);
+  padding: 0.18rem 0.45rem;
 }
 
 .btn-remove {
-  background: #fff;
-  border-color: #d0d7de;
-  color: #cf222e;
+  background: transparent;
+  border-color: #6b3030;
+  color: var(--bad);
 }
 
 .badge-degraded {
-  font-size: 0.72rem;
-  color: #9a6700;
-  background: #fff8c5;
-  border: 1px solid #d4a72c;
-  border-radius: 999px;
+  font-size: 0.68rem;
+  color: var(--warn);
+  background: rgba(232, 163, 23, 0.12);
+  border: 1px solid var(--accent-dim);
   padding: 0.1rem 0.45rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .panel-hint {
   margin: 0;
-  color: #8c959f;
+  color: var(--text-dim);
   font-style: italic;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .table-wrap {
   overflow: auto;
   flex: 1;
   min-height: 0;
+  border: 1px solid var(--border);
+  background: var(--bg-inset);
 }
 
 .monitor-table {
   width: 100%;
+  min-width: 52rem;
   border-collapse: collapse;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
 }
 
 .monitor-table th,
 .monitor-table td {
-  border-bottom: 1px solid #d0d7de;
-  padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid var(--border);
+  padding: 0.32rem 0.4rem;
   text-align: left;
   vertical-align: top;
+}
+
+.monitor-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.monitor-table tbody tr:hover {
+  background: var(--bg-hover);
 }
 
 .monitor-table th {
   position: sticky;
   top: 0;
-  background: #f6f8fa;
-  color: #656d76;
-  font-weight: 600;
+  background: var(--bg-table-head);
+  color: var(--accent);
+  font-weight: 700;
   z-index: 1;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.65rem;
 }
 
 .col-node {
-  max-width: 10rem;
+  min-width: 9rem;
 }
 
 .node-label {
-  font-weight: 600;
+  font-weight: 650;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .node-id {
-  font-size: 0.68rem;
-  color: #8c959f;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
   word-break: break-all;
 }
 
 .mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.72rem;
+  color: var(--cyan);
 }
 
 .col-ts {
   white-space: nowrap;
-  font-size: 0.68rem;
-  color: #57606a;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
 }
 
 .col-status {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   max-width: 6rem;
   word-break: break-word;
+  color: var(--text-muted);
 }
 
 .col-write {
@@ -372,13 +388,12 @@ function onDrop(event: DragEvent): void {
 .write-input {
   flex: 1;
   min-width: 4rem;
-  padding: 0.2rem 0.35rem;
-  border: 1px solid #d0d7de;
-  border-radius: 4px;
-  font-size: 0.72rem;
+  padding: 0.18rem 0.32rem;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
 }
 
 .row-bad .col-value {
-  color: #cf222e;
+  color: var(--bad);
 }
 </style>

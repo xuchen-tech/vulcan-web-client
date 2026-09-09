@@ -32,3 +32,18 @@ export function nodeClassLabel(nodeClass: OpcNodeClass): string {
 export function nodeClassIcon(nodeClass: OpcNodeClass): string {
   return NODE_CLASS_ICON[nodeClass] ?? '·'
 }
+
+const NODE_CLASS_TONE: Record<number, string> = {
+  [NodeClass.Object]: 'tone-object',
+  [NodeClass.Variable]: 'tone-variable',
+  [NodeClass.Method]: 'tone-method',
+  [NodeClass.ObjectType]: 'tone-type',
+  [NodeClass.VariableType]: 'tone-type',
+  [NodeClass.ReferenceType]: 'tone-ref',
+  [NodeClass.DataType]: 'tone-data',
+  [NodeClass.View]: 'tone-view',
+}
+
+export function nodeClassTone(nodeClass: OpcNodeClass): string {
+  return NODE_CLASS_TONE[nodeClass] ?? 'tone-unknown'
+}

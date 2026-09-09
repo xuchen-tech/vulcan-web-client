@@ -105,16 +105,17 @@ function onSubmit(): void {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(27, 31, 36, 0.45);
+  background: rgba(6, 8, 10, 0.72);
   padding: 1rem;
 }
 
 .dialog {
   width: min(28rem, 100%);
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(27, 31, 36, 0.2);
-  padding: 1rem 1rem 0.85rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  padding: 0.9rem 1rem 0.85rem;
 }
 
 .dialog-header {
@@ -122,11 +123,16 @@ function onSubmit(): void {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .dialog-header h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
 .btn-close {
@@ -135,21 +141,21 @@ function onSubmit(): void {
   font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
-  color: #656d76;
+  color: var(--text-muted);
 }
 
 .node-id {
   margin: 0 0 0.35rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.75rem;
-  color: #57606a;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--cyan);
   word-break: break-all;
 }
 
 .hint {
   margin: 0 0 0.75rem;
-  font-size: 0.75rem;
-  color: #8c959f;
+  font-size: 0.72rem;
+  color: var(--text-dim);
 }
 
 .field {
@@ -159,19 +165,16 @@ function onSubmit(): void {
 }
 
 .field-label {
-  font-size: 0.75rem;
-  color: #656d76;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .field-input {
   padding: 0.45rem 0.55rem;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-  font-size: 0.9rem;
-}
-
-.field-input:disabled {
-  opacity: 0.6;
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
 }
 
 .dialog-footer {
@@ -183,29 +186,23 @@ function onSubmit(): void {
 
 .btn {
   padding: 0.35rem 0.75rem;
-  border-radius: 6px;
   border: 1px solid transparent;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  font-size: 0.72rem;
 }
 
 .btn-secondary {
-  background: #f6f8fa;
-  border-color: #d0d7de;
-  color: #24292f;
+  background: var(--bg-inset);
+  border-color: var(--border-strong);
+  color: var(--text);
 }
 
 .btn-primary {
-  background: #0969da;
-  color: #fff;
+  background: var(--accent-dim);
+  color: #fff6e5;
+  border-color: var(--accent);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #0550ae;
+  filter: brightness(1.08);
 }
 </style>

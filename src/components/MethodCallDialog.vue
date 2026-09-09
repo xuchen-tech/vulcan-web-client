@@ -256,7 +256,7 @@ async function onCall(): Promise<void> {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(27, 31, 36, 0.45);
+  background: rgba(6, 8, 10, 0.72);
   padding: 1rem;
 }
 
@@ -264,10 +264,11 @@ async function onCall(): Promise<void> {
   width: min(34rem, 100%);
   max-height: min(90vh, 42rem);
   overflow: auto;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(27, 31, 36, 0.2);
-  padding: 1rem 1rem 0.85rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  padding: 0.9rem 1rem 0.85rem;
 }
 
 .dialog-header {
@@ -275,11 +276,16 @@ async function onCall(): Promise<void> {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .dialog-header h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
 .btn-close {
@@ -288,20 +294,20 @@ async function onCall(): Promise<void> {
   font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
-  color: #656d76;
+  color: var(--text-muted);
 }
 
 .method-name {
   margin: 0 0 0.25rem;
-  font-weight: 600;
+  font-weight: 650;
   font-size: 0.9rem;
 }
 
 .node-id {
   margin: 0 0 0.2rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.72rem;
-  color: #57606a;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--cyan);
   word-break: break-all;
 }
 
@@ -311,21 +317,23 @@ async function onCall(): Promise<void> {
 
 .section h4 {
   margin: 0 0 0.45rem;
-  font-size: 0.82rem;
-  color: #656d76;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
 .panel-hint {
   margin: 0;
-  color: #8c959f;
+  color: var(--text-dim);
   font-style: italic;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
 }
 
 .panel-error {
   margin: 0.5rem 0 0;
-  color: #cf222e;
-  font-size: 0.82rem;
+  color: var(--bad);
+  font-size: 0.8rem;
 }
 
 .field {
@@ -336,30 +344,29 @@ async function onCall(): Promise<void> {
 }
 
 .field-label {
-  font-size: 0.78rem;
-  color: #24292f;
+  font-size: 0.75rem;
+  color: var(--text);
 }
 
 .field-meta {
   display: block;
   margin-top: 0.1rem;
-  color: #8c959f;
-  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-size: 0.68rem;
   font-weight: normal;
 }
 
 .field-input {
   padding: 0.4rem 0.55rem;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  font-family: var(--font-mono);
 }
 
 .arg-list {
   margin: 0;
   padding-left: 1rem;
-  font-size: 0.78rem;
-  color: #57606a;
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
 .arg-list li {
@@ -368,34 +375,35 @@ async function onCall(): Promise<void> {
 
 .arg-list strong {
   margin-right: 0.35rem;
-  color: #24292f;
+  color: var(--text);
 }
 
 .result-section {
-  border-top: 1px solid #d0d7de;
+  border-top: 1px solid var(--border);
   padding-top: 0.65rem;
 }
 
 .result-ok {
   margin: 0 0 0.35rem;
-  color: #1a7f37;
-  font-size: 0.82rem;
+  color: var(--good);
+  font-size: 0.8rem;
 }
 
 .result-bad {
   margin: 0 0 0.35rem;
-  color: #cf222e;
-  font-size: 0.82rem;
+  color: var(--bad);
+  font-size: 0.8rem;
 }
 
 .result-meta {
   margin: 0 0 0.2rem;
-  font-size: 0.72rem;
-  color: #656d76;
+  font-size: 0.68rem;
+  color: var(--text-muted);
 }
 
 .mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
+  color: var(--cyan);
 }
 
 .dialog-footer {
@@ -405,35 +413,29 @@ async function onCall(): Promise<void> {
   margin-top: 1rem;
   position: sticky;
   bottom: 0;
-  background: #fff;
+  background: var(--bg-panel);
   padding-top: 0.5rem;
 }
 
 .btn {
   padding: 0.35rem 0.75rem;
-  border-radius: 6px;
   border: 1px solid transparent;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  font-size: 0.72rem;
 }
 
 .btn-secondary {
-  background: #f6f8fa;
-  border-color: #d0d7de;
-  color: #24292f;
+  background: var(--bg-inset);
+  border-color: var(--border-strong);
+  color: var(--text);
 }
 
 .btn-primary {
-  background: #0969da;
-  color: #fff;
+  background: var(--accent-dim);
+  color: #fff6e5;
+  border-color: var(--accent);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #0550ae;
+  filter: brightness(1.08);
 }
 </style>

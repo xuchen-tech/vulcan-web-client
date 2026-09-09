@@ -67,50 +67,60 @@ const nodeDetail = useNodeDetailStore()
 
 .panel-hint {
   margin: 0;
-  color: #8c959f;
+  color: var(--text-dim);
   font-style: italic;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .panel-error {
   margin: 0;
-  color: #cf222e;
-  font-size: 0.85rem;
+  color: var(--bad);
+  font-size: 0.82rem;
 }
 
 .table-wrap {
   overflow: auto;
   flex: 1;
   min-height: 0;
+  border: 1px solid var(--border);
+  background: var(--bg-inset);
 }
 
 .ref-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
 }
 
 .ref-table th,
 .ref-table td {
-  border-bottom: 1px solid #d0d7de;
-  padding: 0.3rem 0.35rem;
+  border-bottom: 1px solid var(--border);
+  padding: 0.28rem 0.35rem;
   text-align: left;
   vertical-align: top;
+}
+
+.ref-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.015);
 }
 
 .ref-table th {
   position: sticky;
   top: 0;
-  background: #f6f8fa;
-  color: #656d76;
-  font-weight: 600;
+  background: var(--bg-table-head);
+  color: var(--accent);
+  font-weight: 700;
   z-index: 1;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.62rem;
 }
 
 .mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
   word-break: break-all;
+  color: var(--cyan);
 }
 </style>

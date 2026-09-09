@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import { NodeClass } from '@wsopcua/wsopcua/data-model'
 
 import { encodeDraggedNode, OPCUA_NODE_DRAG_TYPE } from '@/shared/drag-drop'
-import { nodeClassIcon, nodeClassLabel } from '@/shared/nodeclass-icons'
+import { nodeClassIcon, nodeClassLabel, nodeClassTone } from '@/shared/nodeclass-icons'
 import type { TreeNode } from '@/stores/address-space'
 
 defineOptions({ name: 'TreeNodeRow' })
@@ -77,7 +77,11 @@ function onDragStart(event: DragEvent): void {
       </button>
       <span v-else class="expand-spacer" />
 
-      <span class="node-icon" :title="nodeClassLabel(node.nodeClass)">
+      <span
+        class="node-icon"
+        :class="nodeClassTone(node.nodeClass)"
+        :title="nodeClassLabel(node.nodeClass)"
+      >
         {{ nodeClassIcon(node.nodeClass) }}
       </span>
       <span class="node-label" :title="node.nodeId">{{ node.displayName }}</span>
@@ -114,19 +118,20 @@ function onDragStart(event: DragEvent): void {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.15rem 0.35rem 0.15rem 0;
-  border-radius: 4px;
+  padding: 0.12rem 0.35rem 0.12rem 0;
+  border-radius: var(--radius);
   cursor: pointer;
   user-select: none;
   line-height: 1.35;
 }
 
 .tree-row:hover {
-  background: #eaeef2;
+  background: var(--bg-hover);
 }
 
 .tree-row.selected {
-  background: #ddf4ff;
+  background: var(--bg-selected);
+  box-shadow: inset 2px 0 0 var(--cyan);
 }
 
 .tree-row.draggable {
@@ -142,8 +147,8 @@ function onDragStart(event: DragEvent): void {
   padding: 0;
   border: none;
   background: transparent;
-  color: #656d76;
-  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-size: 0.6rem;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -161,10 +166,18 @@ function onDragStart(event: DragEvent): void {
 .node-icon {
   width: 1rem;
   text-align: center;
-  color: #57606a;
   flex-shrink: 0;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
 }
+
+.tone-object { color: var(--accent); }
+.tone-variable { color: var(--cyan); }
+.tone-method { color: #d9b44a; }
+.tone-type { color: #8fb3d9; }
+.tone-ref { color: #a78bfa; }
+.tone-data { color: #67e8f9; }
+.tone-view { color: #86efac; }
+.tone-unknown { color: var(--text-muted); }
 
 .node-label {
   flex: 1;
@@ -172,12 +185,17 @@ function onDragStart(event: DragEvent): void {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+}
+
+.tree-row.selected .node-label {
+  color: var(--cyan);
 }
 
 .node-id {
-  color: #8c959f;
-  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
   flex-shrink: 0;
   max-width: 6rem;
   overflow: hidden;

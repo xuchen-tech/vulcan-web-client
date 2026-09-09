@@ -172,99 +172,104 @@ function closeMethodDialog(): void {
 
 .btn {
   padding: 0.25rem 0.6rem;
-  border-radius: 4px;
   border: 1px solid transparent;
-  font-size: 0.78rem;
-  cursor: pointer;
-}
-
-.btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+  font-size: 0.7rem;
 }
 
 .btn-read {
-  background: #f6f8fa;
-  border-color: #d0d7de;
-  color: #24292f;
+  background: var(--bg-inset);
+  border-color: var(--border-strong);
+  color: var(--text);
 }
 
 .btn-write {
-  background: #0969da;
-  color: #fff;
+  background: var(--accent-dim);
+  color: #fff6e5;
+  border-color: var(--accent);
 }
 
 .btn-write:hover:not(:disabled) {
-  background: #0550ae;
+  filter: brightness(1.08);
 }
 
 .btn-monitor {
-  background: #8250df;
-  color: #fff;
+  background: var(--cyan-dim);
+  color: #d8fffb;
+  border-color: var(--cyan);
 }
 
 .btn-monitor:hover:not(:disabled) {
-  background: #6639ba;
+  filter: brightness(1.08);
 }
 
 .btn-method {
-  background: #bf8700;
-  color: #fff;
+  background: #6b5210;
+  color: #fff6e5;
+  border-color: var(--accent);
 }
 
 .btn-method:hover:not(:disabled) {
-  background: #9a6700;
+  filter: brightness(1.08);
 }
 
 .panel-hint {
   margin: 0;
-  color: #8c959f;
+  color: var(--text-dim);
   font-style: italic;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .panel-hint.compact {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
 }
 
 .panel-error {
   margin: 0;
-  color: #cf222e;
-  font-size: 0.85rem;
+  color: var(--bad);
+  font-size: 0.82rem;
 }
 
 .table-wrap {
   overflow: auto;
   flex: 1;
   min-height: 0;
+  border: 1px solid var(--border);
+  background: var(--bg-inset);
 }
 
 .attr-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
 }
 
 .attr-table th,
 .attr-table td {
-  border-bottom: 1px solid #d0d7de;
-  padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid var(--border);
+  padding: 0.32rem 0.4rem;
   text-align: left;
   vertical-align: top;
+}
+
+.attr-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.015);
 }
 
 .attr-table th {
   position: sticky;
   top: 0;
-  background: #f6f8fa;
-  color: #656d76;
-  font-weight: 600;
+  background: var(--bg-table-head);
+  color: var(--accent);
+  font-weight: 700;
   z-index: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.65rem;
 }
 
 .col-name {
   white-space: nowrap;
-  color: #57606a;
+  color: var(--text-muted);
   width: 38%;
 }
 
@@ -274,28 +279,31 @@ function closeMethodDialog(): void {
 
 .col-status {
   white-space: nowrap;
-  color: #656d76;
-  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-size: 0.68rem;
   max-width: 7rem;
+  font-family: var(--font-mono);
 }
 
 .value-main {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--cyan);
 }
 
 .value-detail {
   margin-top: 0.2rem;
-  color: #656d76;
-  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
   line-height: 1.35;
 }
 
 .row-bad .value-main {
-  color: #cf222e;
+  color: var(--bad);
 }
 
 .row-value .col-name {
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--accent);
 }
 </style>

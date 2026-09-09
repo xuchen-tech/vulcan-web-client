@@ -53,7 +53,8 @@ watch(
   <footer class="log-panel">
     <div class="log-header">
       <div class="log-title">
-        <h2>Log</h2>
+        <span class="panel-mark" />
+        <h2>Event Log</h2>
         <span class="log-count">{{ summaryText }}</span>
       </div>
 
@@ -92,8 +93,8 @@ watch(
         class="log-line"
         :class="levelClass(entry.level)"
       >
-        <span class="log-time">[{{ formatLogTime(entry.time) }}]</span>
-        <span class="log-level">[{{ LOG_LEVEL_LABEL[entry.level] }}]</span>
+        <span class="log-time">{{ formatLogTime(entry.time) }}</span>
+        <span class="log-level">{{ LOG_LEVEL_LABEL[entry.level] }}</span>
         <span class="log-message">{{ entry.message }}</span>
       </div>
     </div>
@@ -104,12 +105,12 @@ watch(
 .log-panel {
   display: flex;
   flex-direction: column;
-  padding: 0.5rem 1rem;
-  background: #24292f;
-  color: #c9d1d9;
-  border-top: 1px solid #30363d;
-  min-height: 6.5rem;
-  max-height: 12rem;
+  padding: 0.45rem 0.75rem 0.5rem;
+  background: var(--bg-header);
+  color: var(--text);
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .log-header {
@@ -118,27 +119,23 @@ watch(
   align-items: center;
   justify-content: space-between;
   gap: 0.35rem 0.75rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.3rem;
 }
 
 .log-title {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.45rem;
 }
 
 .log-header h2 {
   margin: 0;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #8b949e;
 }
 
 .log-count {
-  font-size: 0.72rem;
-  color: #6e7681;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-dim);
 }
 
 .log-controls {
@@ -152,8 +149,10 @@ watch(
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.72rem;
-  color: #8b949e;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .control.checkbox {
@@ -162,67 +161,82 @@ watch(
 }
 
 .control-select {
-  padding: 0.1rem 0.3rem;
-  border: 1px solid #30363d;
-  border-radius: 4px;
-  background: #21262d;
-  color: #c9d1d9;
-  font-size: 0.72rem;
+  padding: 0.12rem 0.3rem;
+  font-size: 0.7rem;
 }
 
 .clear-btn {
-  padding: 0.1rem 0.45rem;
-  border: 1px solid #30363d;
-  border-radius: 4px;
-  background: #21262d;
-  color: #8b949e;
-  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg-inset);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
 }
 
 .clear-btn:hover {
-  color: #f0f6fc;
-  border-color: #484f58;
+  color: var(--text);
+  border-color: var(--accent);
 }
 
 .log-list {
   flex: 1;
   overflow: auto;
-  font-family: ui-monospace, monospace;
-  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   line-height: 1.45;
   min-height: 0;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  padding: 0.25rem 0.4rem;
 }
 
 .log-empty {
   margin: 0;
-  color: #6e7681;
+  color: var(--text-dim);
   font-style: italic;
 }
 
 .log-line {
+  display: grid;
+  grid-template-columns: 5.4rem 3.2rem 1fr;
+  gap: 0.45rem;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-.log-time,
+.log-time {
+  color: var(--text-dim);
+}
+
 .log-level {
-  color: #8b949e;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
+.level-ok .log-level,
 .level-ok .log-message {
-  color: #7ee787;
+  color: var(--good);
 }
 
+.level-err .log-level,
 .level-err .log-message {
-  color: #ffa198;
+  color: var(--bad);
 }
 
+.level-warn .log-level,
 .level-warn .log-message {
-  color: #e3b341;
+  color: var(--warn);
+}
+
+.level-info .log-level {
+  color: var(--info);
 }
 
 .level-info .log-message {
-  color: #c9d1d9;
+  color: var(--text);
 }
 </style>

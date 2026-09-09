@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 import ConnectionBar from '@/components/ConnectionBar.vue'
 import AddressSpaceTree from '@/components/AddressSpaceTree.vue'
@@ -7,6 +7,7 @@ import AttributesPanel from '@/components/AttributesPanel.vue'
 import ReferencesPanel from '@/components/ReferencesPanel.vue'
 import DataAccessView from '@/components/DataAccessView.vue'
 import LogPanel from '@/components/LogPanel.vue'
+import { usePanelLayout } from '@/shared/column-layout'
 import { useConnectionStore } from '@/stores/connection'
 import { useMonitorStore } from '@/stores/monitor'
 import { useNodeDetailStore } from '@/stores/node-detail'
@@ -14,6 +15,11 @@ import { useNodeDetailStore } from '@/stores/node-detail'
 const connectionStore = useConnectionStore()
 const nodeDetailStore = useNodeDetailStore()
 const monitorStore = useMonitorStore()
+const shellEl = ref<HTMLElement | null>(null)
+const mainEl = ref<HTMLElement | null>(null)
+const rightEl = ref<HTMLElement | null>(null)
+const { dragging, columnTemplate, attrTemplate, shellTemplate, startDrag } =
+  usePanelLayout(mainEl, rightEl, shellEl)
 
 onMounted(() => {
   connectionStore.init()
@@ -29,31 +35,100 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="app-shell">
+  <div
+    ref="shellEl"
+    class="app-shell"
+    :class="{
+      'resizing-col': dragging === 'left' || dragging === 'right',
+      'resizing-row': dragging === 'attr' || dragging === 'log',
+    }"
+    :style="{ gridTemplateRows: shellTemplate }"
+  >
     <ConnectionBar />
 
-    <main class="main-grid">
+    <main
+      ref="mainEl"
+      class="main-grid"
+      :style="{ gridTemplateColumns: columnTemplate }"
+    >
       <aside class="panel address-space">
-        <h2>Address Space</h2>
+        <header class="panel-head">
+          <span class="panel-mark" />
+          <h2>Address Space</h2>
+          <span class="panel-tag">Browse</span>
+        </header>
         <AddressSpaceTree />
       </aside>
 
+      <div
+        class="col-splitter"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="调整 Address Space 与 Data Access 宽度"
+        title="拖动调整列宽"
+        @pointerdown="startDrag('left', $event)"
+      />
+
       <section class="panel data-access">
-        <h2>Data Access</h2>
+        <header class="panel-head">
+          <span class="panel-mark" />
+          <h2>Data Access</h2>
+          <span class="panel-tag">Monitor</span>
+        </header>
         <DataAccessView />
       </section>
 
-      <aside class="panel right-stack">
+      <div
+        class="col-splitter"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="调整 Data Access 与 Attributes 宽度"
+        title="拖动调整列宽"
+        @pointerdown="startDrag('right', $event)"
+      />
+
+      <aside
+        ref="rightEl"
+        class="panel right-stack"
+        :style="{ gridTemplateRows: attrTemplate }"
+      >
         <div class="sub-panel attributes">
-          <h2>Attributes</h2>
+          <header class="panel-head">
+            <span class="panel-mark" />
+            <h2>Attributes</h2>
+            <span class="panel-tag">Node</span>
+          </header>
           <AttributesPanel />
         </div>
+
+        <div
+          class="row-splitter"
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="调整 Attributes 与 References 高度"
+          title="拖动调整高度"
+          @pointerdown="startDrag('attr', $event)"
+        />
+
         <div class="sub-panel references">
-          <h2>References</h2>
+          <header class="panel-head">
+            <span class="panel-mark" />
+            <h2>References</h2>
+            <span class="panel-tag">Links</span>
+          </header>
           <ReferencesPanel />
         </div>
       </aside>
     </main>
+
+    <div
+      class="row-splitter log-splitter"
+      role="separator"
+      aria-orientation="horizontal"
+      aria-label="调整 Event Log 高度"
+      title="拖动调整日志高度"
+      @pointerdown="startDrag('log', $event)"
+    />
 
     <LogPanel />
   </div>
@@ -62,26 +137,27 @@ onUnmounted(() => {
 <style scoped>
 .app-shell {
   display: grid;
-  grid-template-rows: auto 1fr auto;
   height: 100%;
   min-height: 0;
 }
 
 .main-grid {
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) minmax(280px, 1.4fr) minmax(240px, 1fr);
   min-height: 0;
   overflow: hidden;
+  background: var(--border);
+  padding: 1px;
 }
 
 .panel {
-  padding: 0.75rem;
-  border-right: 1px solid #d0d7de;
+  padding: 0.65rem 0.7rem 0.55rem;
   overflow: auto;
-  background: #fff;
+  background: var(--bg-panel);
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .address-space,
@@ -94,42 +170,88 @@ onUnmounted(() => {
   min-height: 0;
 }
 
-.panel:last-child {
-  border-right: none;
+.col-splitter,
+.row-splitter {
+  background: var(--border);
+  position: relative;
+  z-index: 2;
+  touch-action: none;
+}
+
+.col-splitter {
+  width: 6px;
+  margin: 0 -1px;
+  cursor: col-resize;
+}
+
+.row-splitter {
+  height: 6px;
+  margin: -1px 0;
+  cursor: row-resize;
+}
+
+.log-splitter {
+  margin: 0;
+  z-index: 3;
+}
+
+.col-splitter::after,
+.row-splitter::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--accent-dim);
+  box-shadow: 0 0 6px rgba(232, 163, 23, 0.35);
+}
+
+.col-splitter::after {
+  width: 2px;
+  height: 2.4rem;
+}
+
+.row-splitter::after {
+  width: 2.4rem;
+  height: 2px;
+}
+
+.col-splitter:hover,
+.app-shell.resizing-col .col-splitter,
+.row-splitter:hover,
+.app-shell.resizing-row .row-splitter {
+  background: #3a2a12;
+}
+
+.col-splitter:hover::after,
+.app-shell.resizing-col .col-splitter::after,
+.row-splitter:hover::after,
+.app-shell.resizing-row .row-splitter::after {
+  background: var(--accent);
 }
 
 .right-stack {
   display: grid;
-  grid-template-rows: 1fr 1fr;
   padding: 0;
-  gap: 0;
+  background: var(--border);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .sub-panel {
-  padding: 0.75rem;
+  padding: 0.65rem 0.7rem 0.55rem;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   min-height: 0;
-}
-
-.sub-panel h2 {
-  flex-shrink: 0;
+  min-width: 0;
+  background: var(--bg-panel);
 }
 
 .sub-panel :deep(.attributes-panel),
 .sub-panel :deep(.references-panel) {
   flex: 1;
   min-height: 0;
-}
-
-.attributes {
-  border-bottom: 1px solid #d0d7de;
-}
-
-.placeholder {
-  margin: 0;
-  color: #8c959f;
-  font-style: italic;
 }
 </style>
