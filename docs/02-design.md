@@ -42,6 +42,8 @@ vulcan-web-client/
 │   │   ├── readwrite.ts        # 读/写 Value（含类型推断/转换）
 │   │   ├── subscription.ts     # Subscription + MonitoredItem 管理
 │   │   ├── method.ts           # 方法调用
+│   │   ├── history.ts          # HistoryRead raw
+│   │   ├── history-parse.ts    # 时间范围/分页/曲线点纯函数
 │   │   ├── types.ts            # 领域类型（NodeInfo/AttrRow/RefRow/MonitorRow…）
 │   │   └── format.ts           # Variant/StatusCode/时间戳的展示格式化
 │   ├── stores/
@@ -56,6 +58,7 @@ vulcan-web-client/
 │   │   ├── ReferencesPanel.vue # 右中：引用表
 │   │   ├── DataAccessView.vue  # 中栏底部：监视表（读写就地）
 │   │   ├── MethodCallDialog.vue# 方法调用对话框
+│   │   ├── HistoryTrendDialog.vue # HistoryRead 表格 + 曲线
 │   │   ├── WriteValueDialog.vue# 写值对话框
 │   │   └── LogPanel.vue        # 底部：日志
 │   └── shared/
@@ -126,7 +129,13 @@ Variant/DataType（格式化统一走 `opcua/format.ts`）。
 - `call(objectId, methodId, inputs)`：组装 `CallMethodRequest` → `callP`；返回
   outputArguments + statusCode。
 
-### 4.8 格式化（format.ts）
+### 4.8 历史数据（history.ts）
+- `readHistoryRaw(query)`：组装 `ReadRawModifiedDetails`（isReadModified=false）+
+  `HistoryReadValueId`，调用 `session.readHistoryValueP`；按 continuation point 分页。
+- 输出 `HistoryReadOutcome`：`{ samples, statusCode, truncated }`，样本含展示值与
+  可选数值（供曲线）。时间范围/条数解析见 `history-parse.ts`。
+
+### 4.9 格式化（format.ts）
 - `variantToDisplay(variant)`、`statusCodeToText(sc)`、`nodeClassName(n)`、
   `dateTimeToLocal(ts)`。集中处理数组、结构体（尽力展示）、null。
 
@@ -148,7 +157,7 @@ Variant/DataType（格式化统一走 `opcua/format.ts`）。
 
 - 选中树节点 → 触发 `address-space` store 的 `select(nodeId)` →
   并发读属性 + 引用 → 刷新右栏。
-- 树节点/属性面板提供“加入监视”“写值”“调用方法”入口。
+- 树节点/属性面板提供“加入监视”“写值”“调用方法”“历史”入口。
 - 首版采用固定三栏（CSS grid），可停靠布局列为后续。
 
 ## 6. 数据流与错误处理
@@ -163,7 +172,7 @@ Variant/DataType（格式化统一走 `opcua/format.ts`）。
 - 单元（Vitest）：`format.ts` 纯函数；类型推断/转换（readwrite）逻辑；store action 用
   mock service。
 - 端到端冒烟（Node + `ws`）：`test/e2e_smoke.mjs` 直接用 `@wsopcua/wsopcua` 对
-  `vulcan_server --ws` 跑 连接→浏览→读→写→订阅一拍→方法（若模型含），沿用
+  `vulcan_server --ws` 跑 连接→浏览→读→写→订阅一拍→HistoryRead→方法（若模型含），沿用
   vulcan/web/test 的 browser_shim 思路在 Node 提供 WebSocket。
 - 联调对象：`../../docs/08-websocket-transport.md` 的 `opc.wss://` 启动方式。
 

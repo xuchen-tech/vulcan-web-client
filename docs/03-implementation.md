@@ -20,6 +20,7 @@
 | 6 | 方法调用 | FR-7 |
 | 7 | 日志/状态整合与错误处理 | FR-8/NFR-6 |
 | 8 | 端到端冒烟测试 + 联调收尾 | NFR-7/8 |
+| 9 | 历史数据 HistoryRead raw + 趋势对话框 | FR-9 |
 
 > 每个阶段可独立提交、独立验收。建议顺序执行；2 依赖 1，3/4/5/6 依赖 2。
 
@@ -211,7 +212,7 @@
 
 **做法要点**：
 - Node + `ws` 提供 WebSocket，用 `@wsopcua/wsopcua` 跑：连接→浏览→读→写→
-  订阅一拍→（可选）方法。沿用 vulcan/web/test 的 browser_shim 思路。
+  订阅一拍→HistoryRead raw→（可选）方法。沿用 vulcan/web/test 的 browser_shim 思路。
 - `run_smoke.sh` 假定 `vulcan_server --ws` 已在给定端口运行。
 - README 写明：如何起 vulcan_server 的 wss 端点、如何 dev/build、如何跑冒烟。
 
@@ -220,13 +221,36 @@
   日志显示各步骤成功。
 - AC-8.2 Vitest 单元用例（format/类型推断/store mock）全部通过。
 - AC-8.3 手动联调：浏览器打开应用，完成 连接→浏览→选节点看属性/引用→加入监视→
-  写值→（可选）调方法 全流程无阻断。
+  写值→历史→（可选）调方法 全流程无阻断。
 - AC-8.4 README 按步骤可复现启动与联调。
+
+---
+
+## 阶段 9：历史数据（HistoryRead raw）
+
+**目标**：对启用 Historizing 的 Variable 读取原始历史，表格 + 标量曲线展示。
+
+**产出**：`src/opcua/history.ts`、`src/opcua/history-parse.ts`、
+`src/components/HistoryTrendDialog.vue`，属性面板「历史」入口。
+
+**做法要点**：
+- `readHistoryRaw` 使用 `ReadRawModifiedDetails` + `session.readHistoryValueP`。
+- 默认最近 15 分钟，可改起止时间/条数或读全部；continuation point 最多 8 页。
+- 标量数值绘 SVG 折线；Boolean 按 0/1；字符串/数组只进表格。
+- 节点未启用历史时展示 StatusCode，不阻断其他面板。
+
+**验收标准**：
+- AC-9.1 选中 `Speed`/`Counter`（demo 已 historizing），打开「历史」后表格出现若干条
+  带 SourceTimestamp 的值。
+- AC-9.2 标量节点显示曲线；切换 5 分钟 / 15 分钟 / 1 小时 / 全部 能重新查询。
+- AC-9.3 对未启用 Historizing 的 Variable，HistoryRead 返回非 Good 并在对话框/日志
+  显示，页面不崩溃。
+- AC-9.4 `test/e2e_smoke.mjs` 对 Speed 节点 HistoryRead raw 有覆盖（无数据时 SKIP）。
 
 ---
 
 ## 交付与验收口径
 
 - 每阶段以其 AC 全绿为“完成”；阶段可独立提交。
-- 首版整体验收 = 阶段 0–8 的 AC 全部通过 + `01-requirements.md` §2 的 FR-1~FR-8 覆盖。
-- 非目标（§4）不在首版验收范围，作为后续阶段待办池。
+- 首版整体验收 = 阶段 0–9 的 AC 全部通过 + `01-requirements.md` §2 的 FR-1~FR-9 覆盖。
+- 非目标（§4，不含已落地的 HistoryRead raw）不在验收范围，作为后续阶段待办池。

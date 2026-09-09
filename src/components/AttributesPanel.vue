@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import HistoryTrendDialog from '@/components/HistoryTrendDialog.vue'
 import MethodCallDialog from '@/components/MethodCallDialog.vue'
 import WriteValueDialog from '@/components/WriteValueDialog.vue'
 import { useAddressSpaceStore } from '@/stores/address-space'
@@ -15,8 +16,9 @@ const monitor = useMonitorStore()
 
 const writeDialogOpen = ref(false)
 const methodDialogOpen = ref(false)
+const historyDialogOpen = ref(false)
 
-const selectedMethodLabel = computed(
+const selectedNodeLabel = computed(
   () => addressSpace.getSelectedNode()?.displayName ?? '',
 )
 
@@ -49,6 +51,14 @@ function openMethodDialog(): void {
 
 function closeMethodDialog(): void {
   methodDialogOpen.value = false
+}
+
+function openHistoryDialog(): void {
+  historyDialogOpen.value = true
+}
+
+function closeHistoryDialog(): void {
+  historyDialogOpen.value = false
 }
 </script>
 
@@ -93,6 +103,9 @@ function closeMethodDialog(): void {
           @click="onAddMonitor"
         >
           加入监视
+        </button>
+        <button type="button" class="btn btn-history" @click="openHistoryDialog">
+          历史
         </button>
       </div>
 
@@ -149,8 +162,15 @@ function closeMethodDialog(): void {
     <MethodCallDialog
       :visible="methodDialogOpen"
       :method-id="addressSpace.selectedNodeId ?? ''"
-      :method-label="selectedMethodLabel"
+      :method-label="selectedNodeLabel"
       @close="closeMethodDialog"
+    />
+
+    <HistoryTrendDialog
+      :visible="historyDialogOpen"
+      :node-id="addressSpace.selectedNodeId ?? ''"
+      :node-label="selectedNodeLabel"
+      @close="closeHistoryDialog"
     />
   </div>
 </template>
@@ -168,6 +188,7 @@ function closeMethodDialog(): void {
   display: flex;
   gap: 0.4rem;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .btn {
@@ -209,6 +230,16 @@ function closeMethodDialog(): void {
 }
 
 .btn-method:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.btn-history {
+  background: #243248;
+  color: #d8e8ff;
+  border-color: var(--info);
+}
+
+.btn-history:hover:not(:disabled) {
   filter: brightness(1.08);
 }
 

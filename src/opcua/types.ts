@@ -222,3 +222,29 @@ export interface MethodCallResult {
   inputArgumentResults: string[]
   outputs: MethodCallOutput[]
 }
+
+export interface HistoryReadQuery {
+  nodeId: string
+  startTime: Date
+  endTime: Date
+  numValuesPerNode: number
+  returnBounds?: boolean
+}
+
+export interface HistorySample {
+  displayValue: string
+  numericValue: number | null
+  sourceTimestamp: string
+  sourceTimestampMs: number | null
+  serverTimestamp: string
+  statusCode: string
+  isError: boolean
+}
+
+export interface HistoryReadOutcome {
+  nodeId: string
+  statusCode: string
+  isError: boolean
+  samples: HistorySample[]
+  truncated: boolean
+}

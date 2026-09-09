@@ -34,8 +34,8 @@ UaExpert 是桌面 OPC UA 通用客户端，核心能力如下（作为需求来
 ## 2. 首版范围（核心对齐）
 
 首版目标：在浏览器内复刻 UaExpert 最常用的“连接 → 浏览 → 看属性/引用 → 监视 →
-读写 → 调方法 → 订阅”闭环。历史趋势、A&C 事件、服务器诊断详表、工程持久化、
-可停靠布局 列为后续阶段（见 §4 非目标）。
+读写 → 调方法 → 订阅 → 历史原始值”闭环。A&C 事件、服务器诊断详表、工程持久化、
+可停靠布局、处理/事件历史 列为后续阶段（见 §4 非目标）。
 
 ### FR-1 连接与会话管理
 - FR-1.1 支持输入端点 URL（`wss://` / `ws://`），校验协议前缀。
@@ -90,6 +90,13 @@ UaExpert 是桌面 OPC UA 通用客户端，核心能力如下（作为需求来
 - FR-8.1 全局操作日志面板（时间戳 + 级别 + 消息），沿用现有 vulcan/web 的日志体验。
 - FR-8.2 关键错误（连接失败、读写失败、订阅失败）落到日志并在 UI 提示。
 
+### FR-9 历史数据（History Trend / HistoryRead raw）
+- FR-9.1 对 Variable 节点发起 HistoryRead Raw（`ReadRawModifiedDetails`），
+  可选起止时间、条数上限，处理 continuation point 分页。
+- FR-9.2 以表格展示 SourceTimestamp、Value、ServerTimestamp、StatusCode。
+- FR-9.3 对标量数值（含 Boolean）绘制简易曲线；非数值节点仅表格。
+- FR-9.4 HistoryRead 失败（节点未启用 Historizing 等）展示 StatusCode，不崩溃。
+
 ## 3. 非功能需求（NFR）
 
 - NFR-1 传输：仅 WebSocket；库为 `@wsopcua/wsopcua`（与 vulcan/web 一致）。
@@ -104,7 +111,7 @@ UaExpert 是桌面 OPC UA 通用客户端，核心能力如下（作为需求来
 
 ## 4. 非目标 / 后续阶段（首版不做）
 
-- 历史趋势 History Trend View（HistoryRead + 曲线）。
+- 历史处理值 / 修改记录 / 事件历史（Processed / Modified / Event HistoryRead）。
 - 事件/告警 A&C（Event View、条件确认）。
 - 服务器诊断详表（会话/订阅诊断计数器）。
 - 工程持久化（服务器列表、监视表、布局保存/加载）与可停靠布局。

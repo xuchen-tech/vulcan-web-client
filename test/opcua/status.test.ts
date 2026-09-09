@@ -1,7 +1,7 @@
 import { DataValue, StatusCodes, Variant } from '@wsopcua/wsopcua'
 import { describe, expect, it } from 'vitest'
 
-import { resolveDataValueStatus } from '@/opcua/status'
+import { resolveDataValueStatus, statusIsNoData } from '@/opcua/status'
 
 describe('resolveDataValueStatus', () => {
   it('treats missing status with value as Good', () => {
@@ -32,5 +32,11 @@ describe('resolveDataValueStatus', () => {
 
     expect(resolved.isError).toBe(true)
     expect(resolved.statusCode.name).toBe('BadNotReadable')
+  })
+
+  it('detects GoodNoData / BadNoData as no-data', () => {
+    expect(statusIsNoData(StatusCodes.BadNoData)).toBe(true)
+    expect(statusIsNoData(StatusCodes.GoodNoData)).toBe(true)
+    expect(statusIsNoData(StatusCodes.Good)).toBe(false)
   })
 })

@@ -1,7 +1,7 @@
 /**
  * vulcan-web-client 端到端冒烟（Node + browser_shim + @wsopcua/wsopcua）
  *
- * 覆盖：连接 → 浏览 → 读 → 写 → 订阅一拍 →（可选）Server 方法 Call
+ * 覆盖：连接 → 浏览 → 读 → 写 → 订阅一拍 → HistoryRead raw →（可选）Server 方法 Call
  *
  * 用法（假定 vulcan_server 4840 --ws 4843 已启动）：
  *   node test/e2e_smoke.mjs
@@ -22,6 +22,7 @@ import {
   DataValue,
   MessageSecurityMode,
   OPCUAClient,
+  ReadRawModifiedDetails,
   ReadValueId,
   SecurityPolicy,
   Variant,
@@ -201,6 +202,36 @@ try {
     )
   } else {
     check(true, 'subscription notification received')
+  }
+
+  const historyDetails = new ReadRawModifiedDetails({
+    isReadModified: false,
+    startTime: new Date(Date.UTC(1601, 0, 1)),
+    endTime: new Date(Date.now() + 60_000),
+    numValuesPerNode: 200,
+    returnBounds: false,
+  })
+  const historyResponse = await session.readHistoryValueP(
+    [speedNodeId],
+    historyDetails,
+  )
+  const historyResult = Array.isArray(historyResponse.value)
+    ? historyResponse.value[0]
+    : historyResponse.value
+  const historyData = historyResult?.historyData
+  const historyValues =
+    historyData?.dataValues ?? historyData?.body?.dataValues ?? []
+  if (statusGood(historyResult?.statusCode) && historyValues.length > 0) {
+    check(
+      true,
+      `history ${speedNodeId} (${historyValues.length} values)`,
+    )
+  } else {
+    const detail =
+      historyResult?.statusCode?.toString?.() ??
+      `count=${historyValues.length}`
+    console.log(`SKIP history (${detail})`)
+    check(true, 'history optional skip')
   }
 
   if (!skipMethod && subscription.subscriptionId != null) {

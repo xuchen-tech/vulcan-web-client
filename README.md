@@ -121,7 +121,8 @@ bash test/run_smoke.sh
 2. 浏览 RootFolder (`i=84`)  
 3. 读/写/读回 `ns=3;s=CONFIG.RESOURCE1.Task1.Drive.Speed`  
 4. 对 `Counter` 创建 Subscription + MonitoredItem（等待通知或读回退）  
-5. 调用标准方法 `Server.GetMonitoredItems`（可选，`WSOPCUA_SKIP_METHOD=1` 跳过）  
+5. HistoryRead raw（`Speed`，无数据则 SKIP）  
+6. 调用标准方法 `Server.GetMonitoredItems`（可选，`WSOPCUA_SKIP_METHOD=1` 跳过）  
 
 环境变量：
 
@@ -168,6 +169,13 @@ wss + 证书自动化可参考 `vulcan/web/test/run_ws_web_client_test.sh`（Sig
 1. 展开 **Objects → Server**，选中 Method（如 **GetMonitoredItems**）。  
 2. Attributes → **调用方法**，查看入参/出参定义并执行 Call。
 
+### 历史数据（HistoryRead raw）
+
+1. 选中已启用 Historizing 的 Variable（demo：**Speed** / **Counter** / **Alarm**）。  
+2. Attributes → **历史**，默认读最近 15 分钟原始值。  
+3. 表格列出 SourceTimestamp / Value / Status；标量显示曲线。  
+4. 可改起止时间、条数，或点 **5 分钟 / 15 分钟 / 1 小时 / 全部** 再读。
+
 ### 日志
 
 - 底部 Log 支持级别筛选、自动滚动、毫秒时间戳。  
@@ -198,7 +206,7 @@ vulcan-web-client/
 
 ## 相关文档
 
-- [docs/README.md](docs/README.md) — 需求、设计、分阶段验收（阶段 0–8）  
+- [docs/README.md](docs/README.md) — 需求、设计、分阶段验收（阶段 0–9）  
 - [docs/03-implementation.md](docs/03-implementation.md) — 各阶段 AC 清单  
 - [../vulcan/README.md](../vulcan/README.md) — 构建与启动 `vulcan_server`  
 - [../docs/08-websocket-transport.md](../docs/08-websocket-transport.md) — WebSocket 传输说明  

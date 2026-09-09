@@ -4,6 +4,22 @@ export function statusIsBad(statusCode: StatusCode): boolean {
   return (statusCode.value & 0x80000000) !== 0
 }
 
+export function statusIsNoData(
+  statusCode: StatusCode | undefined | null,
+): boolean {
+  if (!statusCode) {
+    return false
+  }
+  return (
+    statusCode === StatusCodes.BadNoData ||
+    statusCode === StatusCodes.GoodNoData ||
+    statusCode === StatusCodes.BadNoDataAvailable ||
+    statusCode.name === 'BadNoData' ||
+    statusCode.name === 'GoodNoData' ||
+    statusCode.name === 'BadNoDataAvailable'
+  )
+}
+
 export function statusCodeToText(
   statusCode: StatusCode | undefined | null,
 ): string {
