@@ -4,6 +4,10 @@
 
 详细需求、设计与分阶段实施见 [docs/README.md](docs/README.md)。
 
+## 界面预览
+
+![vulcan-web-client 联调演示：三栏布局、Data Access 监视、属性/引用与 Event Log](docs/vulcan-web-client-demo.gif)
+
 ## 前置条件
 
 | 依赖 | 说明 |
